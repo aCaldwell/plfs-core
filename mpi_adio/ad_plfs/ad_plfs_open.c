@@ -292,7 +292,7 @@ void ADIOI_PLFS_Open(ADIO_File fd, int *error_code)
     return;
 }
 
-// a helper that determines whether 0 distributes the index to everyone else
+// a helper t//hat determines whether 0 distributes the index to everyone else
 // or whether everyone just calls plfs_open directly
 int adplfs_open_helper(ADIO_File fd,Plfs_fd **pfd,int *error_code,int perm,
                 int amode,int rank)
@@ -340,15 +340,23 @@ int adplfs_open_helper(ADIO_File fd,Plfs_fd **pfd,int *error_code,int perm,
         open_opt.uniform_restart_rank = rank;
         plfs_err = plfs_open(pfd,fd->filename,amode,rank,perm,&open_opt);
     }else if( fd->access_mode==ADIO_RDONLY && parallel_index_read) {
-        void *global_index;
+        // mdhim-mod at
+        //void *global_index;
+        // mdhim-mod at
         // Function to start the parallel index read
-        err = adplfs_par_index_read(fd,pfd,error_code,perm,amode,rank,
-                             &global_index);
+        //err = adplfs_par_index_read(fd,pfd,error_code,perm,amode,rank,
+        //                     &global_index);
+        err = 0;
+        // mdhim-mod at
         if (err == 0) {
             open_opt.pinter = PLFS_MPIIO;
-            open_opt.index_stream=global_index;
+        // mdhim-mod at
+            //open_opt.index_stream=global_index;
+        // mdhim-mod at
             plfs_err = plfs_open(pfd,fd->filename,amode,rank,perm,&open_opt);
-            free(global_index);
+        // mdhim-mod at
+            //free(global_index);
+        // mdhim-mod at
         }
     } else if(fd->access_mode==ADIO_RDONLY && !disabl_broadcast) {
         // If we are RDONLY and broadcast isn't disabled let's broadcast it
