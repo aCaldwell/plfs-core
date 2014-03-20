@@ -274,12 +274,12 @@ include_directories (src/Plfsrc/yaml-cpp/boost)
 add_library(plfs_lib SHARED ${SRCDIR} ${sources} ${public_headers}
 ${private_headers} ${contrib_headers} ${contrib_public_headers}
 ${contrib_private_headers})
-#SET_TARGET_PROPERTIES(plfs_lib PROPERTIES OUTPUT_NAME plfs)
-#set_target_properties(plfs_lib PROPERTIES
-#        VERSION "${plfs_VERSION_FULL}"
-#        SOVERSION "${plfs_VERSION_MAJOR}.${plfs_VERSION_MINOR}"
-#        PROJECT_LABEL "plfs_lib shared")
-#
+SET_TARGET_PROPERTIES(plfs_lib PROPERTIES OUTPUT_NAME plfs)
+set_target_properties(plfs_lib PROPERTIES
+        VERSION "${plfs_VERSION_FULL}"
+        SOVERSION "${plfs_VERSION_MAJOR}.${plfs_VERSION_MINOR}"
+        PROJECT_LABEL "plfs_lib shared")
+
 #target_link_libraries (plfs_lib plfs-yaml)
 if (NOT DISABLE_STATIC_LIB)
     add_library(plfs_lib_static STATIC ${SRCDIR} ${sources} ${public_headers}
