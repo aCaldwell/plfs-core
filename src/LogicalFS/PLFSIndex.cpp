@@ -213,6 +213,10 @@ find_read_tasks_mdhim(struct mdhim_t *md, struct plfs_backend *bkend,PLFSIndex *
 plfs_error_t
 perform_read_task( ReadTask *task, PLFSIndex *index, ssize_t *ret_readlen )
 {
+// mdhim-mod at
+    PLFSIndex *stub_index = index;
+    stub_index++;
+// mdhim-mod at
     plfs_error_t err = PLFS_SUCCESS;
     ssize_t readlen;
     if ( task->hole ) {
@@ -221,9 +225,11 @@ perform_read_task( ReadTask *task, PLFSIndex *index, ssize_t *ret_readlen )
     } else {
         if ( task->fh == NULL ) {
             // since the task was made, maybe someone else has stashed it
-            index->lock(__FUNCTION__);
-            task->fh = index->getChunkFh(task->chunk_id);
-            index->unlock(__FUNCTION__);
+// mdhim-mod at
+            //index->lock(__FUNCTION__);
+            //task->fh = index->getChunkFh(task->chunk_id);
+            //index->unlock(__FUNCTION__);
+// mdhim-mod at
             if ( task->fh == NULL) { // not currently stashed, we have to open
                 bool won_race = true;   // assume we will be first stash
                 // This is where the data chunk is opened.  We need to
@@ -243,19 +249,25 @@ perform_read_task( ReadTask *task, PLFSIndex *index, ssize_t *ret_readlen )
                 // might benefit from it later
                 // someone else might have stashed one already.  if so,
                 // close the one we just opened and use the stashed one
-                index->lock(__FUNCTION__);
-                IOSHandle *existing;
-                existing = index->getChunkFh(task->chunk_id);
-                if ( existing != NULL ) {
-                    won_race = false;
-                } else {
-                    index->setChunkFh(task->chunk_id, task->fh);   // stash it
-                }
-                index->unlock(__FUNCTION__);
-                if ( ! won_race ) {
-                    task->backend->store->Close(task->fh);
-                    task->fh = existing; // already stashed by someone else
-                }
+                  
+// mdhim-mod at
+                //index->lock(__FUNCTION__);
+// mdhim-mod at
+//                IOSHandle *existing;
+//                existing = index->getChunkFh(task->chunk_id);
+//                if ( existing != NULL ) {
+//                    won_race = false;
+//                } else {
+//                    index->setChunkFh(task->chunk_id, task->fh);   // stash it
+//                }
+// mdhim-mod at
+                //index->unlock(__FUNCTION__);
+// mdhim-mod at
+//                if ( ! won_race ) {
+//                    task->backend->store->Close(task->fh);
+//                    task->fh = existing; // already stashed by someone else
+//                }
+// mdhim-mod at
                 mlog(INT_DCOMMON, "Opened fh %p for %s and %s stash it",
                      task->fh, task->path.c_str(),
                      won_race ? "did" : "did not");

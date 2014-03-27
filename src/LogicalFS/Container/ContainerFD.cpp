@@ -296,8 +296,8 @@ Container_fd::open(struct plfs_physpathinfo *ppip, int flags, pid_t pid,
             // set mdhim options
             db_opts = mdhim_options_init();
             //mdhim_options_set_db_path(db_opts, const_cast<char *>(ppip->canbpath.c_str()));
-            //mdhim_options_set_db_path(db_opts, const_cast<char *>("/users/atorrez/Testing-ext/mdhim-dynamic/mdhim-tng/tests/single_tests"));
-            mdhim_options_set_db_path(db_opts, const_cast<char *>("./"));
+            mdhim_options_set_db_path(db_opts, const_cast<char *>("/users/atorrez/Testing-ext/mdhim-dynamic/mdhim-tng/tests/single_tests"));
+            //mdhim_options_set_db_path(db_opts, const_cast<char *>("./"));
             //mdhim_options_set_db_name(db_opts, const_cast<char *>(ppip->filename));
             mdhim_options_set_db_name(db_opts, const_cast<char *>("out.1395179441"));
             // Should be user defined
