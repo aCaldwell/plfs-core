@@ -280,7 +280,7 @@ set_target_properties(plfs_lib PROPERTIES
         SOVERSION "${plfs_VERSION_MAJOR}.${plfs_VERSION_MINOR}"
         PROJECT_LABEL "plfs_lib shared")
 
-#target_link_libraries (plfs_lib plfs-yaml)
+target_link_libraries (plfs_lib plfs-yaml)
 if (NOT DISABLE_STATIC_LIB)
     add_library(plfs_lib_static STATIC ${SRCDIR} ${sources} ${public_headers}
 ${private_headers} ${contrib_headers} ${contrib_public_headers}

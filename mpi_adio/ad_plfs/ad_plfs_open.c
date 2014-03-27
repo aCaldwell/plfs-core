@@ -319,10 +319,6 @@ int adplfs_open_helper(ADIO_File fd,Plfs_fd **pfd,int *error_code,int perm,
     MPI_Comm hostdir_comm;
     int hostdir_rank, write_mode;
     open_opt.reopen = 0;
-<<<<<<< HEAD
-=======
-    //open_opt.mdhim_comm = (void *)((uintptr_t)(fd->comm));
->>>>>>> atorrez-test_mdhim
     open_opt.mdhim_comm = &fd->comm;
     plfs_debug("XXXACXXX - mpi_adio/ad_plfs/ad_plfs_open::%s: MDHIM Comm set.\n", myname);
     // get a hostdir comm to use to serialize write a bit
@@ -408,6 +404,11 @@ int adplfs_open_helper(ADIO_File fd,Plfs_fd **pfd,int *error_code,int perm,
             plfs_debug("XXXACXXX - mpi_adio/ad_plfs/ad_plfs_open::%s: call to plfs_barrier\n",myname);
             plfs_barrier(hostdir_comm,rank);
         }
+        // XXX AC mdhim-mod
+        if (write_mode) {
+            plfs_barrier(hostdir_comm,rank);
+        }
+        // XXX AC mdhim-mod
     }
     // clean up the communicator we used
     if (write_mode) {

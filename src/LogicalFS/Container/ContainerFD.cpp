@@ -299,7 +299,7 @@ Container_fd::open(struct plfs_physpathinfo *ppip, int flags, pid_t pid,
             //mdhim_options_set_db_path(db_opts, const_cast<char *>("/users/atorrez/Testing-ext/mdhim-dynamic/mdhim-tng/tests/single_tests"));
             mdhim_options_set_db_path(db_opts, const_cast<char *>("./"));
             //mdhim_options_set_db_name(db_opts, const_cast<char *>(ppip->filename));
-            mdhim_options_set_db_name(db_opts, const_cast<char *>("out.1395179441"));
+            mdhim_options_set_db_name(db_opts, const_cast<char *>("out.1395935156"));
             // Should be user defined
             mdhim_options_set_db_type(db_opts, LEVELDB);
             mdhim_options_set_key_type(db_opts, MDHIM_LONG_INT_KEY);
