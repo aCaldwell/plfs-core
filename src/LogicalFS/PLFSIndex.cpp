@@ -149,13 +149,12 @@ find_read_tasks_mdhim(struct mdhim_t *md, struct plfs_backend *bkend,PLFSIndex *
     get_rx_msg = mdhim_get(md, (unsigned long long int)offset, MDHIM_GET_EQ);
     if (!get_rx_msg || get_rx_msg->error) {
         // Key did not match opposite so get previous key
-        //mdhim_ret = mdhim_get(md, (unsigned long long int)offset, MDHIM_GET_PREV);
-        get_rx_msg = mdhim_get(md, (unsigned long long int)offset, MDHIM_GET_PREV);
-        if (!get_rx_msg || get_rx_msg->error) {
+        //get_rx_msg = mdhim_get(md, (unsigned long long int)offset, MDHIM_GET_PREV);
+        //if (!get_rx_msg || get_rx_msg->error) {
             // This is an error condition since not finding keys
             ret = PLFS_EINVAL;
             return ret;
-        }
+        //}
     }
     // Point to returned value from mdhim_get
     plfs_value = (struct plfs_record *)get_rx_msg->value;
@@ -168,6 +167,7 @@ find_read_tasks_mdhim(struct mdhim_t *md, struct plfs_backend *bkend,PLFSIndex *
        task.backend = bkend;
        task.hole = NULL;
        task.chunk_id = NULL;
+       task.buf = &(buf[bytes_traversed]);
        mdhim_value_size = plfs_value->size;
        task.path = plfs_value->dropping_file;
        
