@@ -353,6 +353,7 @@ plfs_reader(struct mdhim_t *md, struct plfs_backend *bkend, void * /* pfd */, ch
     //plfs_error_t plfs_ret = find_read_tasks_mdhim(md, index,&tasks,size,offset,buf);
     //plfs_error_t plfs_ret = find_read_tasks(index,&tasks,size,offset,buf);
     plfs_error_t plfs_ret = find_read_tasks_mdhim(md, bkend, index,&tasks,size,offset,buf);
+
     //index->unlock(__FUNCTION__); // in case another FUSE thread in here
     // mdhim-mod at
     // let's leave early if possible to make remaining code cleaner by
