@@ -156,7 +156,7 @@ Container_fd::open(struct plfs_physpathinfo *ppip, int flags, pid_t pid,
     Index     *index   = NULL;
     bool new_writefile = false;
     // XXX AC: mdhim-mod
-    //bool new_index     = false;
+    bool new_index     = false;
     // XXX AC: mdhim-mod
     bool truncated     = false; // don't truncate twice
 
@@ -269,9 +269,9 @@ Container_fd::open(struct plfs_physpathinfo *ppip, int flags, pid_t pid,
             mlog(PLFS_DBG2, "XXXACXXX - src/LogicalFS/Container/Container_fd::%s: index is NULL\n", __FUNCTION__ );
             // do we delete this on error?
             // mdhim-mod at 
-            /******************
             index = new Index(ppip->canbpath, ppip->canback);
             new_index = true;
+            /******************
             // Did someone pass in an already populated index stream?
             if (open_opt && open_opt->index_stream !=NULL) {
                 //Convert the index stream to a global index
@@ -296,10 +296,17 @@ Container_fd::open(struct plfs_physpathinfo *ppip, int flags, pid_t pid,
             // set mdhim options
             db_opts = mdhim_options_init();
             //mdhim_options_set_db_path(db_opts, const_cast<char *>(ppip->canbpath.c_str()));
-            mdhim_options_set_db_path(db_opts, const_cast<char *>("/users/atorrez/Testing-ext/mdhim-dynamic/mdhim-tng/tests/single_tests"));
+            mdhim_options_set_db_path(db_opts, const_cast<char *>("/users/atorrez/Testing-ext/mdhim-dynamic/mdhim-tng/tests/single_tests/"));
             //mdhim_options_set_db_path(db_opts, const_cast<char *>("./"));
-            //mdhim_options_set_db_name(db_opts, const_cast<char *>(ppip->filename));
-            mdhim_options_set_db_name(db_opts, const_cast<char *>("out.1395935156"));
+            mdhim_options_set_db_name(db_opts, const_cast<char *>(ppip->filename));
+            //mdhim_options_set_db_name(db_opts, const_cast<char *>("out.1395935156"));
+            //2 pe touch 3 file
+            //mdhim_options_set_db_name(db_opts, const_cast<char *>("out.1395959277"));
+            //2 pe 2 obj touch 3 file
+            //mdhim_options_set_db_name(db_opts, const_cast<char *>("out.2pe.2obj.1396373874"));
+            // 8 pe touch 3
+            //mdhim_options_set_db_name(db_opts, const_cast<char *>("out.1395949754"));
+            //mdhim_options_set_db_name(db_opts, const_cast<char *>("out.8pe.touch3.1396364051"));
             // Should be user defined
             mdhim_options_set_db_type(db_opts, LEVELDB);
             mdhim_options_set_key_type(db_opts, MDHIM_LONG_INT_KEY);
@@ -309,11 +316,22 @@ Container_fd::open(struct plfs_physpathinfo *ppip, int flags, pid_t pid,
             mdhim_options_set_value_append(db_opts, 0);
 
             md = mdhimInit(open_opt->mdhim_comm, db_opts);
+            //struct mdhim_getrm_t *mdhim_value;
+            //unsigned long long int key = 0;
+            //mdhim_value = mdhimGet( md, &key, sizeof(key), MDHIM_GET_EQ);
+            //key = 1048576;
+            //mdhim_value = mdhimGet( md, &key, sizeof(key), MDHIM_GET_EQ);
+
+
+
             ret = PLFS_SUCCESS;
         }
-        //if ( ret == PLFS_SUCCESS ) {
-        //    index->incrementOpens(1);
-        //}
+        // mdhim-mod at
+        if ( ret == PLFS_SUCCESS ) {
+            index->incrementOpens(1);
+        }
+        // mdhim-mod at
+
         // can't cache index if error or if in O_RDWR
         // be nice to be able to cache but trying to do so
         // breaks things.  someone should fix this one day
@@ -360,9 +378,9 @@ Container_fd::open(struct plfs_physpathinfo *ppip, int flags, pid_t pid,
             (*pfd)->setWritefile( wf );
         }
         // mdhim-mod at
-        //if ( index && new_index ) {
-        //    (*pfd)->setIndex(index);
-        //}
+        if ( index && new_index ) {
+            (*pfd)->setIndex(index);
+        }
         // mdhim-mod at
     }
     if (ret == PLFS_SUCCESS) {
@@ -401,6 +419,7 @@ Container_fd::close(pid_t pid, uid_t uid, int open_flags,
     // make sure to remove the appropriate open handle for this thread by
     // using the original open_flags
     // clean up after writes
+    //mdhimClose(md);
     if ( isWriter(open_flags) ) {
         assert(wf);
         int tmp_writers;
@@ -478,6 +497,7 @@ Container_fd::close(pid_t pid, uid_t uid, int open_flags,
         delete this->fd;
         this->fd = NULL;
     }
+    mdhimClose(md);
     *num_ref = ref_count;
     return ret;
 }

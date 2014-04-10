@@ -148,6 +148,10 @@ class Index : public Metadata, public PLFSIndex
 
         plfs_error_t setChunkFh( pid_t chunk_id, IOSHandle *fh);
 
+        plfs_error_t setChunkBackend(plfs_backend *mdback, 
+                                     string backend_path,
+                                     unsigned int chunk_index);
+
         plfs_error_t globalLookup( IOSHandle **fh, off_t *chunk_off, size_t *length,
                                    string& path, struct plfs_backend **backp,
                                    bool *hole, pid_t *chunk_id,

@@ -22,6 +22,11 @@ public:
                                        string& path, struct plfs_backend **backp,
                                        bool *hole, pid_t *chunk_id,
                                        off_t logical ) = 0;
+// mdhim-mod at
+    virtual plfs_error_t setChunkBackend(plfs_backend *mdback,
+                                         string plfs_backend,
+                                         unsigned int chunk_index) = 0;
+// mdhim-mod at
 };
 
 /**

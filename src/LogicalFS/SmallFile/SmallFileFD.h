@@ -42,6 +42,13 @@ class Small_fd : public Plfs_fd, public PLFSIndex
                                   string& path, struct plfs_backend **backp,
                                   bool *hole, pid_t *chunk_id,
                                   off_t logical);
+        //mdhim-mod at
+        //stub for mdhim integration
+        plfs_error_t setChunkBackend(plfs_backend *mdback,
+                                     string backend_path,
+                                     unsigned int chunk_index);
+        //mdhim-mod at
+
 
         plfs_error_t compress_metadata(const char *path);
         int incrementOpens(int amount);
