@@ -399,7 +399,7 @@ Index::~Index()
     /*
     hostIndex.clear();
     global_index.clear();
-    chunk_map.clear();
+//    chunk_map.clear();
     */
 }
 
@@ -1153,6 +1153,25 @@ Index::setChunkFh( pid_t chunkid, IOSHandle *newfh )
     chunk_map[chunkid].fh = newfh;
     return PLFS_SUCCESS;
 }
+
+// mdhim-mod at
+// Added this to place mdhim info into chunk_map
+plfs_error_t
+Index::setChunkBackend(plfs_backend *mdback, string backend_path, unsigned int chunk_index)
+{
+    if (chunk_map.size() == 0) {
+        // resize based on chunk_id value plus one 
+        // e.g. 0-7 implies size of 8
+        chunk_map.resize(chunk_index+1);
+    }
+    ChunkFile cf;
+    cf.backend = mdback;
+    cf.fh = NULL;
+    cf.bpath = backend_path;
+    chunk_map[chunk_index] = cf;
+    return PLFS_SUCCESS;
+}
+// mdhim-mod at
 
 // this is a helper function to globalLookup which returns information
 // identifying the physical location of some piece of data
