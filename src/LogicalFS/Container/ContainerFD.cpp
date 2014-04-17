@@ -298,15 +298,16 @@ Container_fd::open(struct plfs_physpathinfo *ppip, int flags, pid_t pid,
             //mdhim_options_set_db_path(db_opts, const_cast<char *>(ppip->canbpath.c_str()));
             mdhim_options_set_db_path(db_opts, const_cast<char *>("/users/acaldwell/projects/plfs-mdhim-testing/"));
             //mdhim_options_set_db_path(db_opts, const_cast<char *>("./"));
-            //mdhim_options_set_db_name(db_opts, const_cast<char *>(ppip->filename));
-            mdhim_options_set_db_name(db_opts, const_cast<char *>("out.1395935156"));
+            mdhim_options_set_db_name(db_opts, const_cast<char *>(ppip->filename));
+            //mdhim_options_set_db_name(db_opts, const_cast<char *>("out.1395935156"));
             // Should be user defined
             mdhim_options_set_db_type(db_opts, LEVELDB);
             mdhim_options_set_key_type(db_opts, MDHIM_LONG_INT_KEY);
             mdhim_options_set_debug_level(db_opts, MLOG_CRIT);
-            mdhim_options_set_max_recs_per_slice(db_opts, 1);
-            mdhim_options_set_server_factor(db_opts, 10);
+            mdhim_options_set_max_recs_per_slice(db_opts, 4);
+            mdhim_options_set_server_factor(db_opts, 4);
             mdhim_options_set_value_append(db_opts, 0);
+            mdhim_options_set_num_worker_threads(db_opts, 2);
 
             md = mdhimInit(open_opt->mdhim_comm, db_opts);
             ret = PLFS_SUCCESS;
@@ -401,6 +402,7 @@ Container_fd::close(pid_t pid, uid_t uid, int open_flags,
     // make sure to remove the appropriate open handle for this thread by
     // using the original open_flags
     // clean up after writes
+    mdhimClose(md);
     if ( isWriter(open_flags) ) {
         assert(wf);
         int tmp_writers;
