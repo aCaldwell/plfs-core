@@ -117,6 +117,7 @@ find_read_tasks_mdhim(struct mdhim_t *md, struct plfs_backend *bkend,PLFSIndex *
 {
     struct plfs_record {
         //unsigned long long int logical_offset;
+        unsigned int chunk_id;
         off_t logical_offset;
         unsigned long long int size;
         char dropping_file[PATH_MAX];
@@ -124,8 +125,8 @@ find_read_tasks_mdhim(struct mdhim_t *md, struct plfs_backend *bkend,PLFSIndex *
     };
 
 
-    PLFSIndex *stub_index = index;
-    stub_index++;
+//    PLFSIndex *stub_index = index;
+//    stub_index++;
     char *stub_buf = buf;
     stub_buf++;
 
@@ -148,13 +149,13 @@ find_read_tasks_mdhim(struct mdhim_t *md, struct plfs_backend *bkend,PLFSIndex *
     
     get_rx_msg = mdhim_get(md, (unsigned long long int)offset, MDHIM_GET_EQ);
     if (!get_rx_msg || get_rx_msg->error) {
-        // Key did not match opposite so get previous key
-        //get_rx_msg = mdhim_get(md, (unsigned long long int)offset, MDHIM_GET_PREV);
-        //if (!get_rx_msg || get_rx_msg->error) {
+         // Key did not match opposite so get previous key
+         get_rx_msg = mdhim_get(md, (unsigned long long int)offset, MDHIM_GET_PREV);
+         if (!get_rx_msg || get_rx_msg->error) {
             // This is an error condition since not finding keys
             ret = PLFS_EINVAL;
             return ret;
-        //}
+         }
     }
     // Point to returned value from mdhim_get
     plfs_value = (struct plfs_record *)get_rx_msg->value;
@@ -166,10 +167,17 @@ find_read_tasks_mdhim(struct mdhim_t *md, struct plfs_backend *bkend,PLFSIndex *
        //task.length = mdhim_value->size;
        task.backend = bkend;
        task.hole = NULL;
-       task.chunk_id = NULL;
+       task.chunk_id = plfs_value->chunk_id;
        task.buf = &(buf[bytes_traversed]);
        mdhim_value_size = plfs_value->size;
        task.path = plfs_value->dropping_file;
+
+
+       // Set chunk_map up to hold backend and eventually file handles for maintaining 
+       // persistence so that file handles can be freed on close
+       // Need to make 2nd argurment based on mdhim number of entries
+       //
+       ret = index->setChunkBackend(bkend, task.path, task.chunk_id);
        
        // Determine if how many bytes remain so that looping (mdhim_get) continues
 
@@ -195,18 +203,7 @@ find_read_tasks_mdhim(struct mdhim_t *md, struct plfs_backend *bkend,PLFSIndex *
  return PLFS_SUCCESS;
  }
 
-
 // mdhim-mod at
-
-
-
-
-
-
-
-
-
-
 
 /* @param ret_readlen returns bytes read */
 /* ret PLFS_SUCCESS or PLFS_E* */
@@ -227,7 +224,7 @@ perform_read_task( ReadTask *task, PLFSIndex *index, ssize_t *ret_readlen )
             // since the task was made, maybe someone else has stashed it
 // mdhim-mod at
             //index->lock(__FUNCTION__);
-            //task->fh = index->getChunkFh(task->chunk_id);
+            task->fh = index->getChunkFh(task->chunk_id);
             //index->unlock(__FUNCTION__);
 // mdhim-mod at
             if ( task->fh == NULL) { // not currently stashed, we have to open
@@ -253,13 +250,14 @@ perform_read_task( ReadTask *task, PLFSIndex *index, ssize_t *ret_readlen )
 // mdhim-mod at
                 //index->lock(__FUNCTION__);
 // mdhim-mod at
-//                IOSHandle *existing;
-//                existing = index->getChunkFh(task->chunk_id);
-//                if ( existing != NULL ) {
-//                    won_race = false;
-//                } else {
-//                    index->setChunkFh(task->chunk_id, task->fh);   // stash it
-//                }
+// UNCOMMENT THIS TO IMPLEMENT INDEX so that File Handles are persistent
+                IOSHandle *existing;
+                existing = index->getChunkFh(task->chunk_id);
+                if ( existing != NULL ) {
+                    won_race = false;
+                } else {
+                    index->setChunkFh(task->chunk_id, task->fh);   // stash it
+                }
 // mdhim-mod at
                 //index->unlock(__FUNCTION__);
 // mdhim-mod at

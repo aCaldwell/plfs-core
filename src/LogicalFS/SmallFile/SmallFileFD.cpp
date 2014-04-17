@@ -224,6 +224,26 @@ Small_fd::setChunkFh(pid_t chunk_id, IOSHandle *fh) {
     return PLFS_SUCCESS;
 }
 
+// mdhim-mod at
+// Needed this stub in order to link mdhim.  Because class derived from PLFSIndex
+plfs_error_t
+Small_fd::setChunkBackend(plfs_backend *mdback, string backend_path, 
+                          unsigned int chunk_index)
+{
+    chunk_index++;
+    mdback++;
+    backend_path = "";
+  
+    //if (container->chunk_map.size() == 0) {
+    //   container->chunk_map.resize(entry_size);
+    //}
+    //ChunkFile cf;
+    //cf.backend = mdback;
+    //container=>chunk_map[chunk_index] = cf;
+   return PLFS_SUCCESS;
+}
+// mdhim-mod at
+
 plfs_error_t
 Small_fd::globalLookup(IOSHandle **fh, off_t *chunk_off, size_t *length,
                        string& path, struct plfs_backend **backp,
