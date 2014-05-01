@@ -1383,7 +1383,7 @@ Index::addWrite( off_t offset, size_t length, pid_t pid,
         // chunk map only used for read index.  We need to maintain it here
         // so that rank 0 can collect all the local chunk maps to create a
         // global one
-        if(chunk_map.size()==0) {
+        if(chunk_map.size() < chunk_index+1) {
             ChunkFile cf;
             cf.fh = NULL;
             cf.bpath = Container::chunkPathFromIndexPath(index_path,pid);

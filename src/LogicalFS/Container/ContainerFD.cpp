@@ -410,7 +410,7 @@ Container_fd::close(pid_t pid, uid_t uid, int open_flags,
     // make sure to remove the appropriate open handle for this thread by
     // using the original open_flags
     // clean up after writes
-    mdhimClose(md);
+    //mdhimClose(md);
     if ( isWriter(open_flags) ) {
         assert(wf);
         int tmp_writers;
