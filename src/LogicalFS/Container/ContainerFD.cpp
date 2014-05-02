@@ -10,6 +10,7 @@
 #include "mdhim.h"
 #include "mdhim_options.h"
 #include "partitioner_define.h"
+#include <unistd.h>
 // XXX AC: mdhim-mod
 
 // TODO:
@@ -294,19 +295,27 @@ Container_fd::open(struct plfs_physpathinfo *ppip, int flags, pid_t pid,
             // mdhim-mod at
             // XXX AC: mdhim-mod
             // set mdhim options
+            mlog(PLFS_DBG2, "XXXatXXX - Start initing opts\n");
             db_opts = mdhim_options_init();
             mdhim_options_set_db_path(db_opts, const_cast<char *>("/users/acaldwell/projects/plfs-mdhim-testing/"));
+            //mdhim_options_set_db_path(db_opts, const_cast<char *>("/users/atorrez/usr-project-test/"));
             mdhim_options_set_db_name(db_opts, const_cast<char *>(ppip->filename));
             // Should be user defined
             mdhim_options_set_db_type(db_opts, LEVELDB);
             mdhim_options_set_key_type(db_opts, MDHIM_LONG_INT_KEY);
             mdhim_options_set_debug_level(db_opts, MLOG_CRIT);
-            mdhim_options_set_max_recs_per_slice(db_opts, 4);
-            mdhim_options_set_server_factor(db_opts, 4);
+            //mdhim_options_set_max_recs_per_slice(db_opts, 4);
+            //mdhim_options_set_server_factor(db_opts, 4);
+            //mdhim_options_set_value_append(db_opts, 0);
+            mdhim_options_set_max_recs_per_slice(db_opts, 1);
+            mdhim_options_set_server_factor(db_opts, 10);
             mdhim_options_set_value_append(db_opts, 0);
-            mdhim_options_set_num_worker_threads(db_opts, 2);
+            //mdhim_options_set_num_worker_threads(db_opts, 2);
+            mlog(PLFS_DBG2, "XXXatXXX - Done initing opts %s\n",ppip->filename);
+
 
             md = mdhimInit(open_opt->mdhim_comm, db_opts);
+            mlog(PLFS_DBG2, "XXXatXXX - Done mdhimInit\n");
             //struct mdhim_getrm_t *mdhim_value;
             //unsigned long long int key = 0;
             //mdhim_value = mdhimGet( md, &key, sizeof(key), MDHIM_GET_EQ);
@@ -410,7 +419,7 @@ Container_fd::close(pid_t pid, uid_t uid, int open_flags,
     // make sure to remove the appropriate open handle for this thread by
     // using the original open_flags
     // clean up after writes
-    //mdhimClose(md);
+    //mdhimClose(this->md);
     if ( isWriter(open_flags) ) {
         assert(wf);
         int tmp_writers;

@@ -1159,7 +1159,9 @@ Index::setChunkFh( pid_t chunkid, IOSHandle *newfh )
 plfs_error_t
 Index::setChunkBackend(plfs_backend *mdback, string backend_path, unsigned int chunk_index)
 {
-    if (chunk_map.size() == 0) {
+    //if (chunk_map.size() == 0) {
+    if (chunk_map.size() < chunk_index+1) {
+
         // resize based on chunk_id value plus one 
         // e.g. 0-7 implies size of 8
         chunk_map.resize(chunk_index+1);
@@ -1383,7 +1385,7 @@ Index::addWrite( off_t offset, size_t length, pid_t pid,
         // chunk map only used for read index.  We need to maintain it here
         // so that rank 0 can collect all the local chunk maps to create a
         // global one
-        if(chunk_map.size() < chunk_index+1) {
+        if(chunk_map.size()==0) {
             ChunkFile cf;
             cf.fh = NULL;
             cf.bpath = Container::chunkPathFromIndexPath(index_path,pid);
