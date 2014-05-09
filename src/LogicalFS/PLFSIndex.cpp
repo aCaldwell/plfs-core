@@ -146,6 +146,8 @@ find_read_tasks_mdhim(struct mdhim_t *md, struct plfs_backend *bkend,PLFSIndex *
     unsigned long long int mdhim_value_size;
     
     // Determine if offset matches mdhim key by call mdhim_get with MDHIM_GET_EQ
+    mlog(INT_DCOMMON, "Going to call mdhimGet with key = %llu", 
+         (unsigned long long int)offset);
     
     get_rx_msg = mdhim_get(md, (unsigned long long int)offset, MDHIM_GET_EQ);
     if (!get_rx_msg || get_rx_msg->error) {
@@ -159,6 +161,8 @@ find_read_tasks_mdhim(struct mdhim_t *md, struct plfs_backend *bkend,PLFSIndex *
     }
     // Point to returned value from mdhim_get
     plfs_value = (struct plfs_record *)get_rx_msg->value;
+    mlog(INT_DCOMMON, "Got mdhim value offset=%llu chunk_id=%d",
+                     (unsigned long long int)plfs_value->logical_offset, plfs_value->chunk_id);
     
     do {
           
@@ -177,7 +181,9 @@ find_read_tasks_mdhim(struct mdhim_t *md, struct plfs_backend *bkend,PLFSIndex *
        // persistence so that file handles can be freed on close
        // Need to make 2nd argurment based on mdhim number of entries
        //
+       //index->lock(__FUNCTION__);
        ret = index->setChunkBackend(bkend, task.path, task.chunk_id);
+       //index->unlock(__FUNCTION__);
        
        // Determine if how many bytes remain so that looping (mdhim_get) continues
 
@@ -223,9 +229,9 @@ perform_read_task( ReadTask *task, PLFSIndex *index, ssize_t *ret_readlen )
         if ( task->fh == NULL ) {
             // since the task was made, maybe someone else has stashed it
 // mdhim-mod at
-            //index->lock(__FUNCTION__);
+            index->lock(__FUNCTION__);
             task->fh = index->getChunkFh(task->chunk_id);
-            //index->unlock(__FUNCTION__);
+            index->unlock(__FUNCTION__);
 // mdhim-mod at
             if ( task->fh == NULL) { // not currently stashed, we have to open
                 bool won_race = true;   // assume we will be first stash
@@ -248,7 +254,7 @@ perform_read_task( ReadTask *task, PLFSIndex *index, ssize_t *ret_readlen )
                 // close the one we just opened and use the stashed one
                   
 // mdhim-mod at
-                //index->lock(__FUNCTION__);
+                index->lock(__FUNCTION__);
 // mdhim-mod at
 // UNCOMMENT THIS TO IMPLEMENT INDEX so that File Handles are persistent
                 IOSHandle *existing;
@@ -259,12 +265,12 @@ perform_read_task( ReadTask *task, PLFSIndex *index, ssize_t *ret_readlen )
                     index->setChunkFh(task->chunk_id, task->fh);   // stash it
                 }
 // mdhim-mod at
-                //index->unlock(__FUNCTION__);
+                index->unlock(__FUNCTION__);
 // mdhim-mod at
-//                if ( ! won_race ) {
-//                    task->backend->store->Close(task->fh);
-//                    task->fh = existing; // already stashed by someone else
-//                }
+                if ( ! won_race ) {
+                    task->backend->store->Close(task->fh);
+                    task->fh = existing; // already stashed by someone else
+                }
 // mdhim-mod at
                 mlog(INT_DCOMMON, "Opened fh %p for %s and %s stash it",
                      task->fh, task->path.c_str(),
@@ -343,7 +349,7 @@ plfs_reader(struct mdhim_t *md, struct plfs_backend *bkend, void * /* pfd */, ch
 
     // mdhim-mod at
     // had to comment this out not sure about implications right now
-    //index->lock(__FUNCTION__); // in case another FUSE thread in here
+    index->lock(__FUNCTION__); // in case another FUSE thread in here
 
     // mdhim-mod at
 
@@ -351,7 +357,7 @@ plfs_reader(struct mdhim_t *md, struct plfs_backend *bkend, void * /* pfd */, ch
     //plfs_error_t plfs_ret = find_read_tasks_mdhim(md, index,&tasks,size,offset,buf);
     //plfs_error_t plfs_ret = find_read_tasks(index,&tasks,size,offset,buf);
     plfs_error_t plfs_ret = find_read_tasks_mdhim(md, bkend, index,&tasks,size,offset,buf);
-    //index->unlock(__FUNCTION__); // in case another FUSE thread in here
+    index->unlock(__FUNCTION__); // in case another FUSE thread in here
     // mdhim-mod at
     // let's leave early if possible to make remaining code cleaner by
     // not worrying about these conditions
