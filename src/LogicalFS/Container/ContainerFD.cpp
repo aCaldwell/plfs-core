@@ -311,11 +311,16 @@ Container_fd::open(struct plfs_physpathinfo *ppip, int flags, pid_t pid,
             mdhim_options_set_db_type(db_opts, LEVELDB);
             mdhim_options_set_key_type(db_opts, MDHIM_LONG_INT_KEY);
             mdhim_options_set_debug_level(db_opts, MLOG_CRIT);
-            mdhim_options_set_max_recs_per_slice(db_opts, 1);
-            mdhim_options_set_server_factor(db_opts, 10);
+            //mdhim_options_set_max_recs_per_slice(db_opts, 1);
+            mdhim_options_set_max_recs_per_slice(db_opts, 1000);
+            //mdhim_options_set_server_factor(db_opts, 10);
+            mdhim_options_set_server_factor(db_opts, 4);
             mdhim_options_set_value_append(db_opts, 0);
 
             md = mdhimInit(open_opt->mdhim_comm, db_opts);
+
+            //mdhimStatFlush(md);
+
             //struct mdhim_getrm_t *mdhim_value;
             //unsigned long long int key = 0;
             //mdhim_value = mdhimGet( md, &key, sizeof(key), MDHIM_GET_EQ);
@@ -497,7 +502,9 @@ Container_fd::close(pid_t pid, uid_t uid, int open_flags,
         delete this->fd;
         this->fd = NULL;
     }
+    mlog(PLFS_DCOMMON, "Going to Call mdhimclose");
     mdhimClose(md);
+    mlog(PLFS_DCOMMON, "Return from Call mdhimclose");
     *num_ref = ref_count;
     return ret;
 }
