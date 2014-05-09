@@ -99,6 +99,7 @@ typedef struct {
     string bpath;
     struct plfs_backend *backend;
     IOSHandle *fh;           /* NULL if not currently open */
+    signed int inited;
 } ChunkFile;
 
 class Index : public Metadata, public PLFSIndex
