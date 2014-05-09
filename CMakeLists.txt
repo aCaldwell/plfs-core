@@ -52,7 +52,7 @@ set(PLFS_MAN_DIR  "${CMAKE_CURRENT_SOURCE_DIR}/man")
 set(MDHIM_SOURCE_DIR "/users/acaldwell/projects/sources/mdhim/mdhim-tng/src")
 set(UTHASH_SOURCE_DIR "${MDHIM_SOURCE_DIR}/uthash")
 set(MPI_SOURCE_DIR
-    "/opt/mvapich2-gnu-ofa-1.7/include")
+    "/users/acaldwell/projects/mvapich2-1.9-dynamic/mvapich2-1.9/include")
 # XXX AC mdhim-mod
 
 #BUILD_DIR is where we build from
