@@ -228,11 +228,9 @@ perform_read_task( ReadTask *task, PLFSIndex *index, ssize_t *ret_readlen )
     } else {
         if ( task->fh == NULL ) {
             // since the task was made, maybe someone else has stashed it
-// mdhim-mod at
             index->lock(__FUNCTION__);
             task->fh = index->getChunkFh(task->chunk_id);
             index->unlock(__FUNCTION__);
-// mdhim-mod at
             if ( task->fh == NULL) { // not currently stashed, we have to open
                 bool won_race = true;   // assume we will be first stash
                 // This is where the data chunk is opened.  We need to
@@ -253,10 +251,7 @@ perform_read_task( ReadTask *task, PLFSIndex *index, ssize_t *ret_readlen )
                 // someone else might have stashed one already.  if so,
                 // close the one we just opened and use the stashed one
                   
-// mdhim-mod at
                 index->lock(__FUNCTION__);
-// mdhim-mod at
-// UNCOMMENT THIS TO IMPLEMENT INDEX so that File Handles are persistent
                 IOSHandle *existing;
                 existing = index->getChunkFh(task->chunk_id);
                 if ( existing != NULL ) {
@@ -264,14 +259,11 @@ perform_read_task( ReadTask *task, PLFSIndex *index, ssize_t *ret_readlen )
                 } else {
                     index->setChunkFh(task->chunk_id, task->fh);   // stash it
                 }
-// mdhim-mod at
                 index->unlock(__FUNCTION__);
-// mdhim-mod at
                 if ( ! won_race ) {
                     task->backend->store->Close(task->fh);
                     task->fh = existing; // already stashed by someone else
                 }
-// mdhim-mod at
                 mlog(INT_DCOMMON, "Opened fh %p for %s and %s stash it",
                      task->fh, task->path.c_str(),
                      won_race ? "did" : "did not");
