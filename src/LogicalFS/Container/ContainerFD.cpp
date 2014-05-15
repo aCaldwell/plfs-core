@@ -315,7 +315,6 @@ Container_fd::open(struct plfs_physpathinfo *ppip, int flags, pid_t pid,
 
 
             md = mdhimInit(open_opt->mdhim_comm, db_opts);
-            mlog(PLFS_DBG2, "XXXatXXX - Done mdhimInit\n");
             //struct mdhim_getrm_t *mdhim_value;
             //unsigned long long int key = 0;
             //mdhim_value = mdhimGet( md, &key, sizeof(key), MDHIM_GET_EQ);
@@ -497,7 +496,9 @@ Container_fd::close(pid_t pid, uid_t uid, int open_flags,
         delete this->fd;
         this->fd = NULL;
     }
+    mlog(PLFS_DCOMMON, "Going to Call mdhimclose");
     mdhimClose(md);
+    mlog(PLFS_DCOMMON, "Return from Call mdhimclose");
     *num_ref = ref_count;
     return ret;
 }

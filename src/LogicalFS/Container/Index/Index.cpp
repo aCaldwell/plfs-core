@@ -1159,18 +1159,20 @@ Index::setChunkFh( pid_t chunkid, IOSHandle *newfh )
 plfs_error_t
 Index::setChunkBackend(plfs_backend *mdback, string backend_path, unsigned int chunk_index)
 {
-    //if (chunk_map.size() == 0) {
-    if (chunk_map.size() < chunk_index+1) {
-
+    if ( chunk_map.size() < chunk_index+1) {
         // resize based on chunk_id value plus one 
         // e.g. 0-7 implies size of 8
         chunk_map.resize(chunk_index+1);
     }
-    ChunkFile cf;
-    cf.backend = mdback;
-    cf.fh = NULL;
-    cf.bpath = backend_path;
-    chunk_map[chunk_index] = cf;
+    chunk_map[chunk_index].backend = mdback;
+    // Check to see if this is the first time for this chunk_index
+    // entering the map.  If so, set file handle to NULL
+    // so that plfs_reader can initialize it
+    if (chunk_map[chunk_index].inited != (signed int)(0-(chunk_index+1))) { 
+      chunk_map[chunk_index].fh = NULL;
+      chunk_map[chunk_index].inited = 0 - (chunk_index+1);
+    }
+    chunk_map[chunk_index].bpath = backend_path;
     return PLFS_SUCCESS;
 }
 // mdhim-mod at
