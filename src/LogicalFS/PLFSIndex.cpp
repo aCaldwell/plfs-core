@@ -132,8 +132,9 @@ find_read_tasks_mdhim(struct mdhim_t *md, struct plfs_backend *bkend,PLFSIndex *
     stub_buf++;
 
     plfs_error_t ret;
-    ssize_t bytes_remaining =size;
-    ssize_t bytes_traversed =0;
+    ssize_t bytes_remaining = size;
+    ssize_t bytes_traversed = 0;
+    off_t  shift;
     struct mdhim_getrm_t *get_rx_msg;
     struct plfs_record *plfs_value;
 
@@ -157,7 +158,6 @@ find_read_tasks_mdhim(struct mdhim_t *md, struct plfs_backend *bkend,PLFSIndex *
 
     
     // Determine if offset matches mdhim key by call mdhim_get with MDHIM_GET_EQ
-    
     get_rx_msg = mdhim_get(md, (unsigned long long int)offset, MDHIM_GET_EQ);
     if (!get_rx_msg || get_rx_msg->error) {
         // Key did not match opposite so get previous key
@@ -167,6 +167,7 @@ find_read_tasks_mdhim(struct mdhim_t *md, struct plfs_backend *bkend,PLFSIndex *
             ret = PLFS_EINVAL;
             return ret;
         }else if(!get_rx_msg->key || !get_rx_msg->value) {
+            // MDHIM returned but the information was errornous
             printf("mdhimGet with MDHIM_GET_PREV failed.\n");
             ret = PLFS_EINVAL;
             return ret;
@@ -176,24 +177,32 @@ find_read_tasks_mdhim(struct mdhim_t *md, struct plfs_backend *bkend,PLFSIndex *
     plfs_value = (struct plfs_record *)get_rx_msg->value;
     mdhim_value_size = plfs_value->size;
 
-    // Do some checking to see if we got all the information we need to perform the full read
-    if(mdhim_value_size >= size ) {
-        bytes_remaining = 0;
-        bytes_traversed = size;
-    }else if (mdhim_value_size < size || mdhim_value_size >= offset+size) {
-        bytes_remaining -= offset+size-mdhim_value_size;
-        bytes_traversed += offset+size-mdhim_value_size;
-    }
-    
     do {
-        printf("Bytes remaining : %zd\n", bytes_remaining);
+        printf("Bytes remaining = %zd\n", bytes_remaining);
         task.fh = NULL;
-        task.chunk_offset = plfs_value->physical_offset;
-        task.length = min(bytes_remaining, (ssize_t)(offset+size-mdhim_value_size));
+        // Determine the offset to start reading the data dropping at
+        // Example:
+        //  0K                   1K                      2K
+        //   ___________________________________________________________________
+        //  |____________________|_______________________|______________________|
+        //  {-------------v-----------------}
+        //             request (size = 1.5K)
+        //  There will be no issue on a direct hit but when we get the rest of the
+        //  information from the next key we need to know to start at 0 not at 1k
+        //     chunk_offset = offset (0) + bytes_traversed (1K) - current.logical_offset (1K)
+        //     tell plfs to start reading at offset 0 in the referenced data dropping
+        //  the same can be done when the offset starts at 1.5K on the next read query
+        //     chunk_offset = offset (1.5) + bytes_traversed (0) - current.logical_offset (1k)
+        //     tell plfs to start reading at offset 0.5 in the referenced data dropping
+        shift = offset+bytes_traversed - plfs_value->logical_offset;
+        task.chunk_offset = plfs_value->physical_offset + shift;
+        task.length = min(bytes_remaining,(ssize_t)(mdhim_value_size - shift));
+        bytes_remaining -= task.length;
+        bytes_traversed += task.length;
         task.backend = bkend;
         task.hole = NULL;
         task.chunk_id = plfs_value->chunk_id;
-        task.logical_offset = offset + bytes_traversed;
+        task.logical_offset = offset;
         task.buf = &(buf[bytes_traversed]);
         mdhim_value_size = plfs_value->size;
         task.path = plfs_value->dropping_file;
@@ -207,8 +216,9 @@ find_read_tasks_mdhim(struct mdhim_t *md, struct plfs_backend *bkend,PLFSIndex *
         ret = index->setChunkBackend(bkend, task.path, task.chunk_id);
         //index->unlock(__FUNCTION__);
        
-        // Do another mdhim_get
+        // Do another mdhim_get if there are still bytes_remaining
         if (bytes_remaining) {
+            // perform mdhimGet with MDHIM_GET_NEXT flag
             get_rx_msg = mdhim_get(md, (unsigned long long int)offset, MDHIM_GET_NEXT);
             // Test for success
             if(!get_rx_msg || get_rx_msg->error) {
@@ -216,20 +226,9 @@ find_read_tasks_mdhim(struct mdhim_t *md, struct plfs_backend *bkend,PLFSIndex *
                 ret = PLFS_EINVAL;
                 return ret;
             }
-            
 
             plfs_value = (struct plfs_record *)get_rx_msg->value;
             mdhim_value_size = plfs_value->size;
-
-            // To check if we have gotten all the information we need
-            ssize_t tmp_bytes_remaining = offset+size - mdhim_value_size;
-            if(tmp_bytes_remaining >=0) {
-                bytes_remaining -= offset+size - mdhim_value_size;
-                bytes_traversed += offset+size-mdhim_value_size;
-            }else{
-                bytes_remaining = 0;
-                bytes_traversed = size;
-            }
         }
         tasks->push_back(task);
         mdhim_full_release_msg(get_rx_msg);
