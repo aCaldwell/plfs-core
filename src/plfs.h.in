@@ -46,6 +46,7 @@ typedef void *Plfs_dirp;
         int  uniform_restart_enable; 
         pid_t  uniform_restart_rank;
         void * mdhim_comm;  /* The mpi communicator to be passed to MDHIM */
+        int  mdhim_init;
     } Plfs_open_opt;
 
     typedef struct {

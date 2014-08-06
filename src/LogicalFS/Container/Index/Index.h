@@ -12,6 +12,16 @@ using namespace std;
 #include "Metadata.h"
 #include "PLFSIndex.h"
 
+//mdhim-mod-put at
+struct plfs_put_record {
+    unsigned int chunk_id;
+    off_t logical_offset;
+    unsigned long long int size;
+    char dropping_file[PATH_MAX];
+    unsigned long long int physical_offset;
+};
+//mdhim-mod-put at
+
 struct PlfsMount;
 
 // the LocalEntry (HostEntry) and the ContainerEntry should maybe be derived
@@ -115,7 +125,10 @@ class Index : public Metadata, public PLFSIndex
 
         bool ispopulated( );
 
-        void addWrite( off_t offset, size_t bytes, pid_t, double, double );
+        // mdhim-mod-put at
+        //void addWrite( off_t offset, size_t bytes, pid_t, double, double );
+        void addWrite( struct plfs_put_record *, off_t offset, size_t bytes, pid_t, double, double );
+        // mdhim-mod-put at
 
         size_t memoryFootprintMBs();    // how much area the index is occupying
 

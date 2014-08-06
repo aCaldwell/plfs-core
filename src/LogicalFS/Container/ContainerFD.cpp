@@ -161,10 +161,14 @@ Container_fd::open(struct plfs_physpathinfo *ppip, int flags, pid_t pid,
     // XXX AC: mdhim-mod
     bool truncated     = false; // don't truncate twice
 
+    //mdhim-mod-put at
+    md = NULL;
+    //mdhim-mod-put at
+
     // XXX AC: mdhim-mod
 //    struct mdhim_t *md; // mdhim structure pointer
 //    mdhim_options_t *db_opts; // structure used to set up the database for mdhim
-    
+
     /*
     if ( pid == 0 && open_opt && open_opt->pinter == PLFS_MPIIO ) {
         // just one message per MPI open to make sure the version is right
@@ -207,6 +211,27 @@ Container_fd::open(struct plfs_physpathinfo *ppip, int flags, pid_t pid,
     if ( ret == PLFS_SUCCESS && *pfd) {
         plfs_reference_count(*pfd);
     }
+    //mdhim-mod-put at
+    //
+    //In the write case need to initialzie mdhim here since too many barriers prevent initialinzing in write section
+    //Now, plfs_open is called with mdhim_init set to 1 to do mdhim init (after all open calls)
+    if (open_opt != NULL ) {
+      mlog(PLFS_DBG2, "open_opt not NULL mdhim_init =%d %s\n",open_opt->mdhim_init,ppip->filename);
+      if (open_opt->mdhim_init) {
+            db_opts = mdhim_options_init();
+            mdhim_options_set_db_path(db_opts, const_cast<char *>("/panfs/pas12a/vol1/atorrez/mdhim-data/db-test/"));
+            mdhim_options_set_db_name(db_opts, const_cast<char *>(ppip->filename));
+            mdhim_options_set_db_type(db_opts, LEVELDB);
+            mdhim_options_set_key_type(db_opts, MDHIM_LONG_INT_KEY);
+            mdhim_options_set_debug_level(db_opts, MLOG_CRIT);
+            mdhim_options_set_value_append(db_opts, 0);
+            mdhim_options_set_server_factor(db_opts, 2);
+            mlog(PLFS_DBG2, "XXXatXXX - Done initing opts %s\n",ppip->filename);
+            md = mdhimInit(open_opt->mdhim_comm, db_opts);
+            ret = PLFS_SUCCESS;
+       }
+    }
+    //mdhim-mod-put at
     // this next chunk of code works similarly for writes and reads
     // for writes, create a writefile if needed, otherwise add a new writer
     // create the write index file after the write data file so that the
@@ -295,36 +320,48 @@ Container_fd::open(struct plfs_physpathinfo *ppip, int flags, pid_t pid,
             // mdhim-mod at
             // XXX AC: mdhim-mod
             // set mdhim options
+//mdhim-mod-put at
+// Want to do this only in one place (for write and read) but adio path is making this difficult.  Will leave here for now
             mlog(PLFS_DBG2, "XXXatXXX - Start initing opts\n");
             db_opts = mdhim_options_init();
-            mdhim_options_set_db_path(db_opts, const_cast<char *>("/users/acaldwell/projects/plfs-mdhim-testing/"));
-            //mdhim_options_set_db_path(db_opts, const_cast<char *>("/users/atorrez/usr-project-test/"));
+//            //mdhim_options_set_db_path(db_opts, const_cast<char *>("/lustre/lscratch/atorrez/mdhim-data/db-offsets/"));
+            //mdhim_options_set_db_path(db_opts, const_cast<char *>("/lustre/lscratch/atorrez/mdhim-data/db-put-test/"));
+            mdhim_options_set_db_path(db_opts, const_cast<char *>("/panfs/pas12a/vol1/atorrez/mdhim-data/db-test/"));
+//            //mdhim_options_set_db_path(db_opts, const_cast<char *>("/users/atorrez/usr-project-test/"));
             mdhim_options_set_db_name(db_opts, const_cast<char *>(ppip->filename));
-            // Should be user defined
+//            // Should be user defined
             mdhim_options_set_db_type(db_opts, LEVELDB);
             mdhim_options_set_key_type(db_opts, MDHIM_LONG_INT_KEY);
             mdhim_options_set_debug_level(db_opts, MLOG_CRIT);
-            //mdhim_options_set_max_recs_per_slice(db_opts, 4);
-            //mdhim_options_set_server_factor(db_opts, 4);
-            //mdhim_options_set_value_append(db_opts, 0);
-            mdhim_options_set_max_recs_per_slice(db_opts, 1);
-            mdhim_options_set_server_factor(db_opts, 10);
+//            //mdhim_options_set_max_recs_per_slice(db_opts, 4);
+//            //mdhim_options_set_server_factor(db_opts, 4);
+//            //mdhim_options_set_value_append(db_opts, 0);
+//            //mdhim_options_set_max_recs_per_slice(db_opts, 1);
+//            //mdhim_options_set_server_factor(db_opts, 10);
+//            //mdhim_options_set_login_c(db_opts, "localhost", "root", "pass", "stater", "pass");
+//            //char host[]="localhost";
+//            //char root[]="root";
+//            //char pass[]="pass";
+//            //char stater[]="stater";
+//            //mdhim_options_set_max_recs_per_slice(db_opts, 1000);
+            mdhim_options_set_server_factor(db_opts, 2);
+//            //mdhim_options_set_login_c(db_opts, host, root, pass, stater, pass);
             mdhim_options_set_value_append(db_opts, 0);
-            //mdhim_options_set_num_worker_threads(db_opts, 2);
+//            //mdhim_options_set_num_worker_threads(db_opts, 2);
             mlog(PLFS_DBG2, "XXXatXXX - Done initing opts %s\n",ppip->filename);
-
-
+//
+//
             md = mdhimInit(open_opt->mdhim_comm, db_opts);
+//mdhim-mod-put at
             //struct mdhim_getrm_t *mdhim_value;
             //unsigned long long int key = 0;
             //mdhim_value = mdhimGet( md, &key, sizeof(key), MDHIM_GET_EQ);
             //key = 1048576;
             //mdhim_value = mdhimGet( md, &key, sizeof(key), MDHIM_GET_EQ);
-
-
-
             ret = PLFS_SUCCESS;
+
         }
+
         // mdhim-mod at
         if ( ret == PLFS_SUCCESS ) {
             index->incrementOpens(1);
@@ -414,6 +451,7 @@ Container_fd::close(pid_t pid, uid_t uid, int open_flags,
     WriteFile *wf    = this->fd->getWritefile();
     Index     *index = this->fd->getIndex();
     size_t writers = 0, readers = 0, ref_count = 0;
+    int stat_ret;
     // be careful.  We might enter here when we have both writers and readers
     // make sure to remove the appropriate open handle for this thread by
     // using the original open_flags
@@ -496,9 +534,21 @@ Container_fd::close(pid_t pid, uid_t uid, int open_flags,
         delete this->fd;
         this->fd = NULL;
     }
-    mlog(PLFS_DCOMMON, "Going to Call mdhimclose");
-    mdhimClose(md);
-    mlog(PLFS_DCOMMON, "Return from Call mdhimclose");
+    //mlog(PLFS_DCOMMON, "Going to Call mdhimclose");
+    //mdhim-mod-put at
+    if (md != NULL) {
+        //Stat flush MDHIM for possible MDHIM_GET_PREV/NEXT 
+        stat_ret  = mdhimStatFlush(md, md->primary_index);
+        if(stat_ret != MDHIM_SUCCESS) {
+            //mlog(PLFS_DCOMMON, "Error when trying to mdhimStatFlush"); 
+            ret = PLFS_SUCCESS; 
+        }else{
+            ret = PLFS_SUCCESS; 
+        }
+        mdhimClose(md);
+    } 
+    //
+    //mlog(PLFS_DCOMMON, "Return from Call mdhimclose");
     *num_ref = ref_count;
     return ret;
 }
@@ -617,10 +667,14 @@ Container_fd::write(const char *buf, size_t size, off_t offset, pid_t pid,
     */
     plfs_error_t ret = PLFS_SUCCESS;
     ssize_t written;
+
     mlog(PLFS_DBG2, "XXXACXXX - src/LogicalFS/Container/Container_fd::%s: call to Container_OpenFile->getWriteFile\n", __FUNCTION__);
     WriteFile *wf = pfd->getWritefile();
     mlog(PLFS_DBG2, "XXXACXXX - src/LogicalFS/Container/Container_fd::%s: call to WriteFile->write\n", __FUNCTION__);
-    ret = wf->write(buf, size, offset, pid, &written);
+    //mdhim-mod-put at
+    //ret = wf->write(buf, size, offset, pid, &written);
+    ret = wf->write(md, buf, size, offset, pid, &written);
+    //mdhim-mod-put at
     mlog(PLFS_DAPI, "%s: Wrote to %s, offset %ld, size %ld: ret %ld",
          __FUNCTION__, pfd->getPath(), (long)offset, (long)size, (long)ret);
     *bytes_written = written;
