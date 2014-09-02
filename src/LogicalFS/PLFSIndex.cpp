@@ -151,16 +151,6 @@ find_read_tasks_mdhim(struct mdhim_t *md, struct plfs_backend *bkend,PLFSIndex *
     //struct mdhim_getrm_t *mdhim_ret;
     unsigned long long int mdhim_value_size;
 
-    // Stat flush MDHIM for possible MDHIM_GET_PREV/NEXT 
-    int stat_ret  = mdhimStatFlush(md, md->primary_index);
-
-    if(stat_ret != MDHIM_SUCCESS) {
-        printf("Error getting stats\n");
-    }else{
-        printf("Got stats\n");
-    }
-
-    
     // Determine if offset matches mdhim key by call mdhim_get with MDHIM_GET_EQ
     mlog(INT_DCOMMON, "Going to call mdhimGet with key = %llu", 
          (unsigned long long int)offset);
@@ -187,7 +177,6 @@ find_read_tasks_mdhim(struct mdhim_t *md, struct plfs_backend *bkend,PLFSIndex *
     mlog(INT_DCOMMON, "Got mdhim value offset=%llu chunk_id=%d",
                      (unsigned long long int)plfs_value->logical_offset, plfs_value->chunk_id);
     do {
-        printf("Bytes remaining = %zd\n", bytes_remaining);
         task.fh = NULL;
         // Determine the offset to start reading the data dropping at
         // Example:

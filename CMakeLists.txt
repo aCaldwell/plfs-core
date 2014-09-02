@@ -49,10 +49,10 @@ set(PLFS_TOOLS_DIR  "${CMAKE_CURRENT_SOURCE_DIR}/tools")
 set(PLFS_TESTS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/tests")
 set(PLFS_MAN_DIR  "${CMAKE_CURRENT_SOURCE_DIR}/man")
 # XXX AC mdhim-mod
-set(MDHIM_SOURCE_DIR "/users/acaldwell/projects/sources/mdhim/mdhim-tng/src")
+set(MDHIM_SOURCE_DIR "/users/atorrez/Testing-ext/mdhim-dynamic/mdhim-tng/src")
 set(UTHASH_SOURCE_DIR "${MDHIM_SOURCE_DIR}/uthash")
 set(MPI_SOURCE_DIR
-    "/users/acaldwell/projects/mvapich2-1.9-dynamic/mvapich2-1.9/include")
+    "/users/atorrez/plfs/mvapich-dynamic/include")
 # XXX AC mdhim-mod
 
 #BUILD_DIR is where we build from

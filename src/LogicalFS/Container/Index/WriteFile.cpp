@@ -416,7 +416,10 @@ WriteFile::extend( off_t offset )
     plfs_error_t ret;
     ret = prepareForWrite();
     if ( ret == PLFS_SUCCESS ) {
-        index->addWrite( offset, 0, open_pid, createtime, createtime );
+        //mdhim-mod-put at
+        //index->addWrite( offset, 0, open_pid, createtime, createtime );
+        index->addWrite( NULL, offset, 0, open_pid, createtime, createtime );
+       //mdhim-mod-put at
         addWrite( offset, 0 );   // maintain metadata
     }
 
@@ -463,11 +466,22 @@ WriteFile::prepareForWrite( pid_t pid )
 // @param bytes_written return bytes written
 // returns PLFS_SUCCESS or PLFS_E*
 plfs_error_t
-WriteFile::write(const char *buf, size_t size, off_t offset, pid_t pid, ssize_t *bytes_written)
+//mdhim-mod-put at
+//WriteFile::write(const char *buf, size_t size, off_t offset, pid_t pid, ssize_t *bytes_written)
+WriteFile::write(struct mdhim_t *md, const char *buf, size_t size, off_t offset, pid_t pid, ssize_t *bytes_written)
+//mdhim-mod-put at
 {
     mlog(PLFS_DBG, "XXXACXXX - ENTER src/LogicalFS/Container/Index/WriteFile::%s:\n", __FUNCTION__);
     plfs_error_t ret = PLFS_SUCCESS;
     ssize_t written = 0;
+
+    //mdhim-mod-put at
+    struct plfs_put_record mdhim_put_rec;
+    struct plfs_put_record *plfs_record = &mdhim_put_rec;
+    struct mdhim_brm_t *rm;
+    unsigned long long key;
+    //mdhim-mod-put at
+
 
     ret = prepareForWrite( pid );
     if ( ret == PLFS_SUCCESS ) {
@@ -486,7 +500,10 @@ WriteFile::write(const char *buf, size_t size, off_t offset, pid_t pid, ssize_t 
         if ( ret == PLFS_SUCCESS ) {
             write_count++;
             Util::MutexLock(   &index_mux , __FUNCTION__);
-            index->addWrite( offset, written, pid, begin, end );
+            //mdhim-mod-put at
+            //index->addWrite( offset, written, pid, begin, end );
+            index->addWrite( plfs_record, offset, written, pid, begin, end );
+            //mdhim-mod-put at
             // TODO: why is 1024 a magic number?
             int flush_count = 1024;
             if (write_count%flush_count==0) {
@@ -502,6 +519,38 @@ WriteFile::write(const char *buf, size_t size, off_t offset, pid_t pid, ssize_t 
             if (ret == PLFS_SUCCESS) {
                 mlog(PLFS_DBG, "XXXACXXX - src/LogicalFS/Container/Index/WriteFile::%s: call to addWrite\n", __FUNCTION__);
                 addWrite(offset, size);    // track our own metadata
+                //mdhim-mod-put at
+                // This code places data into mdhim  addWrite was responsible for filling most of the mdhim data fields
+                //strcpy(plfs_record->dropping_file, this->container_path.c_str());
+                strcpy(plfs_record->dropping_file, Container::getDataPath(this->subdir_path, this->hostname, pid, createtime).c_str());
+                //return openFile(Container::getDataPath(path,host,p,createtime),m,ret_hand);
+                key = plfs_record->logical_offset;
+                mlog(PLFS_DBG, "XXXXmdhim-mod-put dropping file %s %s\n", plfs_record->dropping_file, __FUNCTION__);
+                mlog(PLFS_DBG, "XXXXmdhim-mod-put logical offsets %lld %s\n", (unsigned long long int)plfs_record->logical_offset, __FUNCTION__);
+                mlog(PLFS_DBG, "XXXXmdhim-mod-put chunk id %d %s\n", plfs_record->chunk_id, __FUNCTION__);
+                mlog(PLFS_DBG, "XXXXmdhim-mod-put physical offset %lld  %s\n", (unsigned long long int)plfs_record->physical_offset, __FUNCTION__);
+                mlog(PLFS_DBG, "XXXXmdhim-mod-put length %lld %s\n", (unsigned long long int)plfs_record->size, __FUNCTION__);
+
+
+
+
+                rm = mdhimPut(md, &key, sizeof(key), plfs_record, sizeof(plfs_put_record), NULL, NULL); 
+                if (!rm || rm->error) {
+                    mlog(PLFS_DBG, "Error inserting key/value into MDHIM WriteFile::%s\n", __FUNCTION__);
+                } else {
+                    mlog(PLFS_DBG, "Success inserting key/value into MDHIM WriteFile::%s\n", __FUNCTION__);
+                }
+
+                mdhim_full_release_msg(rm);
+                //Commit the database
+                int mret = mdhimCommit(md, md->primary_index);
+                if (mret != MDHIM_SUCCESS) {
+                    mlog(PLFS_DBG, "Error committing MDHIM database %s\n", __FUNCTION__);
+                } else {
+                    mlog(PLFS_DBG, "Committed MDHIM database %s\n", __FUNCTION__);
+                }
+
+                //mdhim-mod-put at
             }
             Util::MutexUnlock( &index_mux, __FUNCTION__ );
         }

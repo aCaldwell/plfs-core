@@ -52,7 +52,10 @@ class WriteFile : public Metadata
         plfs_error_t truncate( off_t );
         plfs_error_t extend( off_t );
 
-        plfs_error_t write( const char *, size_t, off_t, pid_t, ssize_t * );
+        //mdhim-mod-put at
+        //plfs_error_t write( const char *, size_t, off_t, pid_t, ssize_t * );
+        plfs_error_t write( struct mdhim_t *, const char *, size_t, off_t, pid_t, ssize_t * );
+        //mdhim-mod-put at
 
         plfs_error_t sync( );
         plfs_error_t sync( pid_t pid );

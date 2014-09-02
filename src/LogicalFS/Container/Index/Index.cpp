@@ -1179,7 +1179,7 @@ Index::setChunkBackend(plfs_backend *mdback, string backend_path, unsigned int c
 
 // this is a helper function to globalLookup which returns information
 // identifying the physical location of some piece of data
-// we found a chunk containing an offset, return necessary stuff
+// we fund a chunk containing an offset, return necessary stuff
 // this does not open the fd to the chunk however
 plfs_error_t
 Index::chunkFound( IOSHandle **xfh, off_t *chunk_off, size_t *chunk_len,
@@ -1321,8 +1321,11 @@ Index::memoryFootprintMBs()
 }
 
 void
-Index::addWrite( off_t offset, size_t length, pid_t pid,
+//mdhim-mod-put at
+//Index::addWrite( off_t offset, size_t length, pid_t pid,
+Index::addWrite( struct plfs_put_record *plfs_rec, off_t offset, size_t length, pid_t pid,
                  double begin_timestamp, double end_timestamp )
+//mdhim-mod-put at
 {
     mlog(PLFS_DBG, "XXXACXXX - ENTER Index::%s\n", __FUNCTION__);
     Metadata::addWrite( offset, length );
@@ -1357,8 +1360,19 @@ Index::addWrite( off_t offset, size_t length, pid_t pid,
         entry.physical_offset = physical_offsets[pid];
         physical_offsets[pid] += length;
         hostIndex.push_back( entry );
-        // Needed for our index stream function
+        // Needed for our index stream function:
         // It seems that we can store this pid for the global entry
+
+        //mdhim-mod-put at
+        plfs_rec->chunk_id = entry.id;
+        plfs_rec->logical_offset = entry.logical_offset;
+        plfs_rec->size =  entry.length;
+        plfs_rec->physical_offset = entry.physical_offset;
+        mlog(PLFS_DBG, "XXXXmdhim-mod-put at chunk id:  %d logical_offset: %lld length %lld phys off %lld %s\n",
+             plfs_rec->chunk_id, (unsigned long long int)plfs_rec->logical_offset, plfs_rec->size, plfs_rec->physical_offset, __FUNCTION__);
+        //mdhim-mod-put at
+
+
     }
     if (buffering && !buffer_filled) {
         // ok this code is confusing
@@ -1499,7 +1513,7 @@ Index::rewriteIndex( IOSHandle *rfh )
         double begin_timestamp = 0, end_timestamp = 0;
         begin_timestamp = itrd->second.begin_timestamp;
         end_timestamp   = itrd->second.end_timestamp;
-        addWrite( itrd->second.logical_offset,itrd->second.length,
+        addWrite( NULL, itrd->second.logical_offset,itrd->second.length,
                   itrd->second.original_chunk, begin_timestamp, end_timestamp );
         /*
         ostringstream os;

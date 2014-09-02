@@ -320,6 +320,9 @@ int adplfs_open_helper(ADIO_File fd,Plfs_fd **pfd,int *error_code,int perm,
     int hostdir_rank, write_mode;
     open_opt.reopen = 0;
     open_opt.mdhim_comm = &fd->comm;
+    //mdhim-mod-put at
+    open_opt.mdhim_init =0;
+    //mdhim-mod-put at
     plfs_debug("XXXACXXX - mpi_adio/ad_plfs/ad_plfs_open::%s: MDHIM Comm set.\n", myname);
     // get a hostdir comm to use to serialize write a bit
     write_mode = (fd->access_mode==ADIO_RDONLY?0:1);
@@ -398,7 +401,7 @@ int adplfs_open_helper(ADIO_File fd,Plfs_fd **pfd,int *error_code,int perm,
         if (write_mode && hostdir_rank) {
             plfs_barrier(hostdir_comm,rank);
         }
-        plfs_debug("XXXACXXX - mpi_adio/ad_plfs/ad_plfs_open::%s: call to plfs_open\n",myname);
+        plfs_debug("XXXATXXX - mpi_adio/ad_plfs/ad_plfs_open::%s: call to plfs_open\n",myname);
         plfs_err = plfs_open( pfd, fd->filename, amode, rank, perm ,&open_opt);
         if (write_mode && !hostdir_rank) {
             plfs_debug("XXXACXXX - mpi_adio/ad_plfs/ad_plfs_open::%s: call to plfs_barrier\n",myname);
@@ -409,6 +412,11 @@ int adplfs_open_helper(ADIO_File fd,Plfs_fd **pfd,int *error_code,int perm,
             plfs_barrier(hostdir_comm,rank);
         }
         // XXX AC mdhim-mod
+        //mdhim-mod-put at
+        open_opt.mdhim_init = 1;
+        plfs_debug("XXXATXXX - Setting mdhim init flag to 1\n",myname);
+        plfs_err = plfs_open( pfd, fd->filename, amode, rank, perm ,&open_opt);
+        //mdhim-mod-put at
     }
     // clean up the communicator we used
     if (write_mode) {
