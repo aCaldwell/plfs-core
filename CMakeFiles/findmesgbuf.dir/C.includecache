@@ -1,0 +1,26 @@
+#IncludeRegexLine: ^[ 	]*#[ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/usr/projects/plfs/rrz/plfs/plfs-2.5-mdhim/tools/findmesgbuf.c
+stdio.h
+-
+stdlib.h
+-
+unistd.h
+-
+fcntl.h
+-
+sys/mman.h
+-
+sys/stat.h
+-
+mlog.h
+/usr/projects/plfs/rrz/plfs/plfs-2.5-mdhim/tools/mlog.h
+
+src/Mlog/mlog.h
+

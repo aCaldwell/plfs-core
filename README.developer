@@ -1,0 +1,156 @@
+1) CODING STYLE
+Please read README.coding
+
+2) Git
+Since PLFS is hosted on github.com, git is the version control system in use.
+Please see README.git for further information on working with git.
+
+3) Receive notifications for PLFS on github.com
+Navigate to the plfs-core page on github.com, 
+https://github.com/plfs/plfs-core. Make sure to be logged in and click on the
+"Watch" button. A user who is "watching" a repository will receive
+notifications of what happens on the repository. Users can edit notification
+settings for their github account in Account Settings.
+
+4) Treat all build warnings as errors.
+No build warnings!
+Use the following flag when running cmake to make sure all warnings are being 
+treated as errors (the flags are set automatically in Debug mode):
+
+-DCMAKE_BUILD_TYPE="Debug"
+
+It should be noted that for the default build without this flag PLFS will build
+in Release mode which has these warnings disabled. This is to allow for users
+to download and build PLFS on esoteric compilers we haven't tested on.
+
+***                                                                        ***
+If you commit code that only builds in Release mode you will be mocked. :)
+***                                                                        ***
+
+5) Everything must be code-reviewed before being committed to the master
+branch on github
+The official master branch of PLFS will be referred to as plfs/plfs-core. In
+order to help maintain code review of every commit to plfs/plfs-core the PLFS
+project will use a Fork & Pull model that github provides.
+
+In order to use the Fork & Pull model, users need to Fork plfs/plfs-core to
+their own account on github. See README.git, SECTION 1. SETUP A LOCAL REPO for
+more information. The user's clone of plfs/plfs-core that resides on
+github.com will be referred to as user/plfs-core.
+
+Each user will now clone their own user/plfs-core when they want to work on
+PLFS. See README.git for more information.
+
+Once a user is finished with the changes they would like to make and all
+changes are committed, they push those changes to user/plfs-core. Once the
+changes are in user/plfs-core, the user will initiate a "Pull Request" on
+github. The "Pull Request" allows others to verify the changes and commit them
+to the master branch of plfs/plfs-core.
+
+The information about initiating a "Pull Request" can be found in README.git.
+Depending on where the changes are coming from and where they are headed, see
+SECTION 2 (master to master), SECTION 3 (non-master branch to non-master
+branch), or SECTION 4 (non-master branch to master branch).
+
+A "Pull Request" is finalized by a developer who has push access to
+plfs/plfs-core. They navigate to the plfs/plfs-core page and click on the 
+"Pull Requests" tab. Each Pull Request will be listed here. The developer will
+click on the applicable Pull Request. On the Pull Request page, it is possible
+to see all commits associated with the Pull Request, including code changes.
+It is also possible to enter comments on the Pull Request page about the
+changes. If the changes are to be committed to plfs/plfs-core, the developer
+will click on the "Merge" button.
+
+A developer different than the one doing the Pull Request must do the code
+review. A developer is not allowed to Merge their own Pull Request.
+
+6) Development cycle
+The "master" branch will be the place to put code that we intend to go out in
+the next release. There is no real requirement that the master branch be
+deployable at any time; instead, it will be the main development branch.
+
+A non-master branch will be created to work on functionality that we know will
+not be in or are not sure will be ready for the next release. Bug fixes can go
+directly to the master branch.
+
+Developers using non-master branches should frequently merge the master branch
+of plfs/plfs-core in to their non-master branches to ensure whatever they are
+working on stays compatible with the current product.
+
+7) Release Process
+For the purposes of tagging a release, changes may be committed directly to
+plfs/plfs-core. Only changes to ChangeLog are allowed to go directly to
+plfs/plfs-core; all others have to go through the normal code review process.
+
+Regression testing a release
+    1) Once all new features are in and a new release is to be made, the
+    master branch of plfs/plfs-core is now frozen. No new features may be
+    committed; only bug-fixes can be committed. Code review will be used to
+    enforce this.
+    2) Verify that the proper version numbers are used at the top of
+    CMakeLists.txt. Make sure 'rc1' is present in either the minor or patch
+    field.
+    3) Verify that 'make dist' creates an acceptable tarball. Verify the
+    following:
+        1) The appropriate patches have been generated in /mpi_adio/patches.
+        Each directory should get a <MPI>-plfs.patch where <MPI> is ompi, 
+        mpich, etc.
+        2) The following are in contrib/init.d: plfs.init, plfs.init.suse,
+        plfs.sysconfig.
+        3) PLFS can be built and used from the resulting tarball.
+    4) Update plfs.spec and verify an rpm can be built with it. This will
+    verify that all files listed in the spec file match what will be created
+    via 'make install'. For the test, set "Version:" in the spec file to
+    <release>rc1 to match the naming convention that will be used by the PLFS
+    tarball created in step 3. Once the test is complete, set "Version:" in
+    the spec file to just <release> instead of <release>rc1. This way the spec
+    file is ready for the general release (it is not anticipated that the spec
+    file will need to change between now and the actual release). Check in any
+    changes to the spec file to plfs/plfs-core via the appropriate method.
+    5) If the procedure outlined in README.git has been followed, the
+    committer will have a working repository with a remote defined as upstream
+    that points to plfs/plfs-core. Upstream will be used directly in the
+    following instructions, so ensure that upstream is sufficiently set up.
+    6) Update ChangeLog
+    7) Commit changes to the local repository.
+    8) Make an annotated git tag: git tag -a <release>rc1
+    9) Push local commits to upstream: git push upstream master
+    10) Push <release>rc1 tag to upstream: git push upstream <release>rc1
+    11) Regression test <release>rc1.
+    12) If problems are found and fixed, iterate through steps 5 through 11
+    to create rc2. Iterate through these steps, generating a new release tag,
+    as many times as needed until the release passes all regression tests
+    satisfactorily. Each time a new release candidate is created, update
+    CMakeLists.txt accordingly with the new rc#. Once all testing requirements
+    have been satisfied, move on to the "Tag the release" section.
+
+Tag the release
+Once regression testing is done and a new release is ready, do the following:
+    1) Update CMakeLists.txt to have the proper version numbers; should mean
+    that only the "rc#" has to be removed from the minor or patch field.
+    2) Commit this change to the local repository
+    3) Make an annotated git tag: git tag -a <release>
+    4) Push changes upstream: git push upstream master
+    5) Push <release> tag to upstream: git push upstream <release>
+    6) The master branch on plfs/plfs-core is now unfrozen.
+After tagging a release, it is a good time to change the PLFS version
+numbers in CMakeLists.txt for the next release. This will help differentiate
+subsequent library names from the library associated with the actual release.
+
+Generate a tarball
+    1) Make sure the local repository is set for <release> (use
+    'git checkout <release>')
+    2) cmake .
+    3) make dist # Creates plfs-<version>.tar.gz
+    4) Upload the tarball
+
+8) MAKEFILES
+Don't edit Makefiles directly.  Edit the CMakeLists.txt file to change build
+behavoir
+
+9) DEBUGGING WITH MLOG
+Please read README.mlog
+
+10) valgrind on OS X
+You will need to run dsymutil on the plfs binary and libplfs.0.dylib to get 
+debug symbols available for valgrind so it can report line numbers.

@@ -1,0 +1,48 @@
+${COPYRIGHT}
+.TH plfs_close 3 "${PACKAGE_STRING}" 
+.SH NAME
+plfs_close 
+.SH SYNTAX
+#include <plfs.h>
+.PP
+plfs_error_t plfs_close( Plfs_fd *, pid_t, uid_t, int open_flags, 
+                         Plfs_close_opt *close_opt, int *num_ref);
+
+.SH DESCRIPTION
+Close a file descriptor.  See close(2) for more information.  If multiple
+threads are sharing a file descriptor, the caller must ensure that all
+calls to plfs_close on a shared descriptor are serialized.
+
+.SH INPUT PARAMETERS
+.TP 1i
+Plfs_fd
+the file handle returned from plfs_open
+.TP 1i
+pid_t 
+the pid_t was passed to the plfs_open
+.TP 1i
+uid_t
+the uid of the caller (used for statistics collection only) 
+.TP 1i
+open_flags
+the open flags that were passed to the plfs_open
+.TP 1i
+Plfs_close_opt
+optional arguments to control low-level functionality 
+
+.SH RETURN VALUES
+Almost all PLFS functions return a plfs_error_t error type with PLFS_SUCCESS 
+indicating that the function completed successfully and PLFS_E* indicating
+an error. All possible return values are enumerated in plfs_error.h and can
+be queried by calling strplfserr(plfs_error_t err) to get more detail about
+the specific error code returned.
+
+If a function fills out any data structures they are passed in as an argument
+and not returned via the return type.
+
+.SH AUTHORS
+${AUTHORS}
+
+.SH SEE ALSO
+${SEEALSO3}
+

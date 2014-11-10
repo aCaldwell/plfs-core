@@ -1,0 +1,34 @@
+#IncludeRegexLine: ^[ 	]*#[ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/usr/projects/plfs/rrz/plfs/plfs-2.5-mdhim/tools/dcon.c
+errno.h
+-
+fcntl.h
+-
+netdb.h
+-
+stdio.h
+-
+stdlib.h
+-
+string.h
+-
+unistd.h
+-
+signal.h
+-
+sys/socket.h
+-
+sys/types.h
+-
+arpa/inet.h
+-
+netinet/in.h
+-
+

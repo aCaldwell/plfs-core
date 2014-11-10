@@ -1,0 +1,34 @@
+#IncludeRegexLine: ^[ 	]*#[ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/usr/projects/plfs/rrz/plfs/plfs-2.5-mdhim/tests/rename.C
+stdarg.h
+-
+stdio.h
+-
+stdlib.h
+-
+time.h
+-
+errno.h
+-
+string.h
+-
+sys/types.h
+-
+sys/stat.h
+-
+sys/time.h
+-
+fcntl.h
+-
+unistd.h
+-
+assert.h
+-
+

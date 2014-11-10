@@ -1,0 +1,50 @@
+${COPYRIGHT}
+.TH plfs_write 3 "${PACKAGE_STRING}" 
+.SH NAME
+plfs_write
+.SH SYNTAX
+#include <plfs.h>
+.PP
+plfs_error_t plfs_write( Plfs_fd *, const char *, size_t, off_t, pid_t,
+                         ssize_t *bytes_written );
+
+.SH DESCRIPTION
+Write to a file descriptor.  See 
+.I write(2)
+for more information.
+Note this function is thread-safe when multiple threads are sharing the same
+file handle.
+
+.SH INPUT PARAMETERS
+.TP 1i
+Plfs_fd
+the file handle returned from plfs_open
+.TP 1i
+char
+what to write
+.TP 1i
+size_t
+size of what to write
+.TP 1i
+off_t
+Offset to start writing
+.TP 1i
+pid_t
+pid of processr to write
+
+.SH RETURN VALUES
+Almost all PLFS functions return a plfs_error_t error type with PLFS_SUCCESS 
+indicating that the function completed successfully and PLFS_E* indicating
+an error. All possible return values are enumerated in plfs_error.h and can
+be queried by calling strplfserr(plfs_error_t err) to get more detail about
+the specific error code returned.
+
+If a function fills out any data structures they are passed in as an argument
+and not returned via the return type.
+
+.SH AUTHORS
+${AUTHORS}
+
+.SH SEE ALSO
+${SEEALSO3}
+

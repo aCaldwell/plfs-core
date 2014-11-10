@@ -1,0 +1,1 @@
+/usr/bin/c++   -O3 -DNDEBUG  -fPIC -dynamic -Wl,--enable-new-dtags CMakeFiles/plfs_check_config.dir/tools/plfs_check_config.cpp.o  -o bin/plfs_check_config -rdynamic lib/libplfs.so.2.5.1 -lplfs-yaml -lz -lpthread /usr/projects/plfs/rrz/mdhim/mdhim-tng/src/libmdhim.so.1 -Wl,-rpath,/usr/projects/plfs/rrz/plfs/plfs-2.5-mdhim/lib 

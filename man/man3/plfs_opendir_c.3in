@@ -1,0 +1,39 @@
+${COPYRIGHT}
+.TH plfs_opendir_c 3 "${PACKAGE_STRING}" 
+.SH NAME
+plfs_opendir_c 
+.SH SYNTAX
+#include <plfs.h>
+.PP
+plfs_error_t plfs_opendir_c( const char *path, Plfs_dirp **plfs_dir );
+
+.SH DESCRIPTION
+This is the C program interface to opening a directory.
+
+.SH INPUT PARAMETERS
+.TP 1i
+path
+the name of the directory to open.
+.TP 1i
+plfs_dir
+the address of the pointer to the opened directory. This is passed to
+plfs_readdir_c to read entries and plfs_closedir_c to close the directory
+when done.
+
+
+.SH RETURN VALUES
+Almost all PLFS functions return a plfs_error_t error type with PLFS_SUCCESS 
+indicating that the function completed successfully and PLFS_E* indicating
+an error. All possible return values are enumerated in plfs_error.h and can
+be queried by calling strplfserr(plfs_error_t err) to get more detail about
+the specific error code returned.
+
+If a function fills out any data structures they are passed in as an argument
+and not returned via the return type.
+
+.SH AUTHORS
+${AUTHORS}
+
+.SH SEE ALSO
+${SEEALSO3}
+

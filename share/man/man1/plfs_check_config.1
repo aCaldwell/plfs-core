@@ -1,0 +1,77 @@
+./Copyright (c) 2009, Los Alamos National Security, LLC All rights reserved.
+./Copyright 2009. Los Alamos National Security, LLC. This software was produced 
+./under U.S. Government contract DE-AC52-06NA25396 for Los Alamos National 
+./Laboratory (LANL), which is operated by Los Alamos National Security, LLC for
+./the U.S. Department of Energy. The U.S. Government has rights to use,
+./reproduce, and distribute this software.  NEITHER THE GOVERNMENT NOR LOS
+./ALAMOS NATIONAL SECURITY, LLC MAKES ANY WARRANTY, EXPRESS OR IMPLIED, OR
+./ASSUMES ANY LIABILITY FOR THE USE OF THIS SOFTWARE.  If software is
+./modified to produce derivative works, such modified software should be
+./clearly marked, so as not to confuse it with the version available from LANL.
+./
+./Additionally, redistribution and use in source and binary forms, with or
+./without modification, are permitted provided that the following conditions are
+./met:
+./ 
+./Redistributions of source code must retain the above copyright notice, this
+./list of conditions and the following disclaimer.
+./ 
+./Redistributions in binary form must reproduce the above copyright notice,
+./this list of conditions and the following disclaimer in the documentation
+./and/or other materials provided with the distribution.
+./
+./Neither the name of Los Alamos National Security, LLC, Los Alamos National
+./Laboratory, LANL, the U.S. Government, nor the names of its contributors may be
+./used to endorse or promote products derived from this software without specific
+./prior written permission.
+./
+./THIS SOFTWARE IS PROVIDED BY LOS ALAMOS NATIONAL SECURITY, LLC AND CONTRIBUTORS
+./"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+./THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+./ARE DISCLAIMED. IN NO EVENT SHALL LOS ALAMOS NATIONAL SECURITY, LLC OR
+./CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+./EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT
+./OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+./INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+./CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+./IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY 
+./OF SUCH DAMAGE. 
+./
+.TH plfs_check_config 1 "PLFS 2.5.1" 
+.SH NAME
+plfs_check_config
+.SH SYNOPSIS
+.B ./plfs_check_config [-mkdir]
+
+.SH DESCRIPTION
+This command will check for a valid PLFS configuration file. If both the user
+and system file exist the user file will be the one parsed.  The output will 
+look something like this:
+.RS
+Config file correctly parsed:
+.br
+Num Hostdirs: 32
+.br
+Threadpool size: 16
+.br
+Num Mountpoints: 1
+.br
+Backend: /tmp/.plfs_store
+.br
+The -mkdir option will attempt to create any required and missing directories.
+
+.SH FILES
+In order to use any of these interfaces, a configuration file must be
+present on the system. (see
+.I plfsrc(5)
+).
+
+.SH AUTHORS
+PLFS is developed at Los Alamos National Laboratory and is available under LANL LA-CC-08-104. It is hosted at
+.I http://sourceforge.net/projects/plfs
+and more information is available at
+.I http://institute.lanl.gov/plfs
+
+.SH SEE ALSO
+
+

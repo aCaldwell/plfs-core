@@ -1,0 +1,42 @@
+${COPYRIGHT}
+.TH plfs_readlink 3 "${PACKAGE_STRING}" 
+.SH NAME
+plfs_readlink 
+.SH SYNTAX
+#include <plfs.h>
+.PP
+plfs_error_t plfs_readlink( const char *path, char *buf, size_t bufsize,
+                            int *bytes );
+
+.SH DESCRIPTION
+Read value of symbolic link.  See 
+.I readlink(2) 
+for more information.
+
+.SH INPUT PARAMETERS
+.TP 1i
+path
+path to symlink to read
+.TP 1i
+buf
+buffer to hold the symlink contents
+.TP 1i
+bufsize
+size of the buffer 
+
+.SH RETURN VALUES
+Almost all PLFS functions return a plfs_error_t error type with PLFS_SUCCESS 
+indicating that the function completed successfully and PLFS_E* indicating
+an error. All possible return values are enumerated in plfs_error.h and can
+be queried by calling strplfserr(plfs_error_t err) to get more detail about
+the specific error code returned.
+
+If a function fills out any data structures they are passed in as an argument
+and not returned via the return type.
+
+.SH AUTHORS
+${AUTHORS}
+
+.SH SEE ALSO
+${SEEALSO3}
+

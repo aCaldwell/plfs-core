@@ -1,0 +1,62 @@
+1) Build the PLFS library and supporting tools.
+
+   0) In order to build the tools that work with fuse, you'll need to have fuse
+      installed and have /dev/libfuse loaded.
+   1) cmake .
+      Please see cmake -LAH for all of the options available. If any headers
+      have been installed in non-standard locations you can set 
+      CMAKE_INCLUDE_PATH to make them discoverable when building.
+      If you want a release build run cmake with -DCMAKE_BUILD_TYPE=Release 
+      and if you want a debug build run with -DCMAKE_BUILD_TYPE=Debug
+      To install in a non-default location run cmake with 
+      -DCMAKE_INSTALL_PREFIX=/desired/install/path
+      Out of tree builds are recommended to keep the source tree clean. To
+      do an out of tree build create a build directory somewhere then run
+      cmake as usual but instead of "cmake [cmake flags] ." use
+      "cmake [cmake flags] /path/to/plfs/src" from within your build dir.
+      Please note that the build dir can not be the same as the install
+      dir; the build and install dirs must be distinct from each other.
+      If admin tool installation is desired, define -DADMIN_TOOLS=yes when
+      running cmake. The admin tools (dcon, findmesgbuf, plfs_map, plfs_query,
+      and plfs_recover) will all be installed in [installpath]/sbin. Man pages 
+      for all tools will be installed alongside PLFS.
+   2) make
+   3) make install
+      The default installation path is /usr/local.
+   4) Add the paths to the PLFS binaries to PATH. If using the default install
+      path, then /usr/local/bin and /usr/local/sbin need to be added to PATH.
+      PLFS's lib directory can also be added to LD_LIBRARY_PATH. The default
+      is /usr/local/lib. It may also be useful to add PLFS's man pages to
+      MANPATH. The default is /usr/local/share/man.
+   ### IMPORTANT ###
+   5) All PLFS installations need a valid plfsrc file. Please see the plfsrc
+      man page located by default in /usr/local/share/man/man5. Please note
+      that the plfsrc file format has changed as of version 2.4. Any old plfsrc
+      files not in the new YAML format need to be edited to conform to the new
+      standard before upgrading to PLFS 2.4 or above. By default PLFS will look
+      for a plfsrc file in $HOME/.plfsrc and /etc/plfsrc. You can also set
+      the PLFSRC environment variable to point to a plfsrc file.
+   6) Check your plfsrc file with plfs_check_config (located in the bin
+      directory in the PLFS source tree after running make or in the
+      installation directory's bin directory).
+
+2) To install PLFS as a ROMIO ADIO layer for MPI-IO.
+
+  Please see mpi_adio/README.patching for instructions on getting PLFS
+  to work as a ROMIO ADIO layer.
+
+3) To install the ACE analysis framework. 
+
+   0) In order to run the tools that work with mpi, you'll need to have a version of
+      mpi installed and loaded. In order to run any of the tools, you will need 
+      to have a version of swig and the following python modules: matplotlib and 
+      networkx. If you want to run the interactive version, you will also need 
+      the wxpython python module.
+   1) Set the shell environment variable PLFS_ACE to 1 in order for the module to 
+      be built. 
+   2) If you are using a version of mpi that cmake is unable to find, set the 
+      following variables when running cmake. 
+      -DMPI_INCLUDE_PATH=/path/to/mpi/include/files to the include 
+      files of mpi and -DMPI_LIBRARY=/path/to/mpi/lib/file
+      to the file of the library .so. The library
+      file should be a library for c++ as the tool is written in c++. 

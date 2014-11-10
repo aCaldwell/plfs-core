@@ -1,0 +1,152 @@
+###############################################################################
+          PLFS: A Checkpoint Filesystem for Parallel Applications
+###############################################################################
+
+PLFS is a parallel virtual file system that rearranges random, concurrent
+writes into sequential writes to unique files (i.e. N-1 into N-N). This
+rearrangment allows write access patterns to be optimized for the underlying
+file system.
+
+Additional info:
+http://institutes.lanl.gov/plfs. Available under LANL LA-CC-08-104.
+
+Email plfs-users@lists.sourceforge.net with any user questions.
+Email plfs-devel@lists.sourceforge.net with any developer questions.
+
+
+***************************************************************************
+What's New
+***************************************************************************
+
+A list of new features and bug fixes for each release is maintained in
+Changelog. Please refer to that file for more information on what changes in
+PLFS between releases.
+
+
+***************************************************************************
+Installing PLFS
+***************************************************************************
+
+For building and installation instructions, please see README.install.
+
+
+***************************************************************************
+Using PLFS
+***************************************************************************
+
+There are three ways to use PLFS: through the FUSE system, through MPI/IO, and
+through the PLFS API.
+
+
+*** Mounting a PLFS file system using FUSE: ***
+
+1) Build and install PLFS with FUSE support (please see README.install)
+2) Make sure your plfsrc file is correct by using plfs_check_config. In order
+   to quickly create the needed directories, use 'plfs_check_config -mkdir'.
+3) Launch the PLFS daemon (which calls fusermount):
+   plfs /path/to/mount
+4) The PLFS daemon can be killed via fusermount:
+   fusermount -u /path/to/mount
+
+/path/to/mount can now be used as any POSIX file system. To check FUSE stats
+and make sure everything is working, run the following:
+cat /path/to/mount/.plfsdebug
+
+NOTE: The plfs binary does not check the existence of backend directories;
+only the existence of the mount point directory is checked. Therefore it is
+possible to successfully run plfs even if plfs_check_config reports that there
+are missing backends. If plfs is started on a mount point that is missing
+backends, the mount point will not be usable. As soon as all of the backends
+are available, the plfs mount point will be usable (no restart is necessary).
+
+NOTE: Not checking for the existence of backend directories is
+done to make mounting plfs scalable on a large cluster. If plfs is configured
+to start at boot time and plfs checks backend directories when it is started,
+this could result in thousands or millions (or more) of stat calls to the
+underlying filesystem in a very short period of time.
+
+NOTE on the above NOTES: Not checking backend directories only applies to
+fuse's actual mount command; plfs will not check the existence of backend
+directories during that call. However, it is possible for fuse to issue
+additional calls on the mount point, such as statfs, when
+'plfs <mount point>' is executed on the command line. These calls will fail
+and it may not be possible to mount plfs without the backend directories
+for those versions/implementations of fuse. It is possible to see what
+commands fuse makes when running 'plfs <mount point>' by using strace.
+
+Several options can be passed to the plfs binary that are passed on to the FUSE
+system. Use the plfs binary's -o command line parameter. Use 'plfs -h' to see
+all options that can be passed. Some useful ones are:
+allow_other   : if mounting as root, this allows others to use plfs
+big_writes    : newer versions of fuse can break writes into 128K chunks 
+direct_io     : older versions can too, but then mmap doesn't work
+auto_cache    : if you are writing to PLFS through MPI-IO or PLFS-API and you want
+                to read from a PLFS FUSE, then use this flag
+
+Example:
+plfs -o big_writes,allow_other /path/to/mount
+
+
+*** Using PLFS as a ROMIO ADIO layer for MPI/IO ***
+
+Please see mpi_adio/README for information on using PLFS as a ROMIO ADIO layer.
+
+
+*** Using the PLFS API ***
+
+1) Build and install the PLFS library. Verify your plfsrc file is correct by
+   using plfs_check_config.
+2) Look at plfs.h to become familar with the PLFS API.
+3) Modify application source to use the PLFS API. Basically, you just change
+   opens to plfs_opens, etc.
+4) Link the PLFS library to your application at compile time. Please see the
+   linking requirements in using PLFS as a ROMIO ADIO layer for what the
+   linking command should look like.
+
+*** For an example of an application ported to use the PLFS native API, see
+    the open source LANL fs_test at: https://github.com/fs-test/fs_test
+
+
+***************************************************************************
+Other Info
+***************************************************************************
+
+For information on PLFS's POSIX-compliance, please see README.POSIX.
+
+Information about the logging capabilities of PLFS is contained in
+README.mlog. Please see that file for more information about getting log
+information from PLFS.
+
+Information for developers, such as rules for coding and working with the
+source repository, is contained in README.developer.
+
+
+***************************************************************************
+Testing
+***************************************************************************
+
+Some functionality tests are provided in the 'tests' directory. Please see and
+use tests/Tester.tcsh.
+
+A regression suite is also available for PLFS, but is not included in the
+normal source tree for PLFS. It is included in the PLFS project on github:
+
+https://github.com/plfs/plfs-regression
+
+The following command should be sufficient to check out the regression suite,
+but if there are any problems, please look at the above URL and follow the
+directions there for getting the regression suite:
+
+git clone git@github.com:plfs/plfs-regression.git
+
+The regression suite is kept up-to-date with PLFS's master branch. As working
+with PLFS changes, the regression suite changes. This means that the regression
+suite's master branch may not work with a particular PLFS release if there has
+been significant divergence in source tree layout and PLFS configuration
+capabilities between the release and master branch. As PLFS does a release, the
+regression suite will be tagged with that release. Thus, it is possible to use
+git to get the regression suite in to a state that should work with a
+particular release if the master branch no longer works with that release.
+
+The regression suite has its own set of documentation, so please refer to its
+README for further information.

@@ -1,0 +1,1 @@
+/usr/bin/c++   -O3 -DNDEBUG  -fPIC -dynamic -Wl,--enable-new-dtags CMakeFiles/plfs_fuse.dir/fuse/main.C.o CMakeFiles/plfs_fuse.dir/fuse/plfs_fuse.cpp.o  -o bin/plfs -rdynamic /lib64/libfuse.so lib/libplfs.so.2.5.1 -lplfs-yaml -lz -lpthread /usr/projects/plfs/rrz/mdhim/mdhim-tng/src/libmdhim.so.1 -Wl,-rpath,/lib64:/usr/projects/plfs/rrz/plfs/plfs-2.5-mdhim/lib 
