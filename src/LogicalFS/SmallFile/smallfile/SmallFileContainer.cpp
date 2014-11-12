@@ -145,6 +145,7 @@ SmallFileContainer::get_writer(pid_t pid) {
 
         release(MEMCACHE_FULLYLOADED, this);
         update(&newWriter, &did);
+        mlog(SMF_INFO, "xxxATxxx in get_writer after update did = %lu", did);
         assert(did != -1); // Make sure we get the right dropping id.
         retval.reset(new SMF_Writer(newWriter, did));
         writers[pid] = retval;

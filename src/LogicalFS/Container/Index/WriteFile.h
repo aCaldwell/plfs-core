@@ -75,8 +75,8 @@ class WriteFile : public Metadata
 
     private:
         plfs_error_t addWriter( pid_t, bool, bool, int& );
-        plfs_error_t openIndexFile( string path, string host, pid_t, mode_t,
-                                    string *index_path, IOSHandle **ret_hand);
+        plfs_error_t openIndexFile( string path, string host, pid_t, /*mode_t,*/
+                                    string *index_path/*, IOSHandle **ret_hand*/);
         plfs_error_t openDataFile(string path,string host,pid_t,mode_t,IOSHandle **ret_hand );
         plfs_error_t openFile( string, mode_t mode, IOSHandle **ret_hand );
         plfs_error_t Close( );

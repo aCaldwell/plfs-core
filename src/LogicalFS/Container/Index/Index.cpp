@@ -521,13 +521,14 @@ Index::flush()
     // valgrind complains about writing uninitialized bytes here....
     // but it's fine as far as I can tell.
     //XXXCDC: it is prob complaining about structure padding
-    void *start = &(hostIndex.front());
-    ssize_t bytes;
-    plfs_error_t ret = Util::Writen(start, len, this->fh, &bytes);
+    //void *start = &(hostIndex.front());
+    //ssize_t bytes;
+    plfs_error_t ret = PLFS_SUCCESS;
+    /*    plfs_error_t ret = Util::Writen(start, len, this->fh, &bytes);
     if ( (size_t)bytes != (size_t)len ) {
         mlog(IDX_DRARE, "%s failed write to fh %p: %s",
              __FUNCTION__, fh, strplfserr(ret));
-    }
+	     }*/
     hostIndex.clear();
     return ret;
 }

@@ -58,10 +58,13 @@ Small_fd::write(const char *buf, size_t size, off_t offset, pid_t /* pid */,
     plfs_error_t ret = PLFS_EBADF;
     *bytes_written = -1;
 
+    mlog(SMF_INFO, "xxxATxxx in write");
     if (open_flags == O_WRONLY || open_flags == O_RDWR) {
         FileID fileid;
         WriterPtr writer;
+        mlog(SMF_INFO, "xxxATxxx in write initing");
         writer = container->get_writer(open_by_pid);
+        mlog(SMF_INFO, "xxxATxxx after call get_writer");
         fileid = get_fileid(writer);
         pthread_rwlock_rdlock(&indexes_lock);
         ret = writer->write(fileid, buf, offset, size, NULL, indexes.get());
@@ -288,19 +291,24 @@ Small_fd::get_fileid(const WriterPtr &writer) {
     FileID fid;
     ssize_t did;
 
+    mlog(SMF_INFO, "xxxATxxx Small_fd In get_fileid ");
     did = writer->get_droppingid();
     pthread_rwlock_rdlock(&fileids_lock);
     itr = idmap_.find(did);
     if (itr != idmap_.end()) {
         fid = itr->second;
+        mlog(SMF_INFO, "xxxATxxx Small_fd In get_fileid  A");
     } else {
         pthread_rwlock_unlock(&fileids_lock);
         pthread_rwlock_wrlock(&fileids_lock);
         itr = idmap_.find(did);
         if (itr != idmap_.end()) { // Somebody else wins the race.
             fid = itr->second;
+            mlog(SMF_INFO, "xxxATxxx Small_fd In get_fileid  B");
         } else {
+            mlog(SMF_INFO, "xxxATxxx In get_fileid before SMF get_fileid call ");
             fid = writer->get_fileid(myName, &container->files);
+            mlog(SMF_INFO, "xxxATxxx In get_fileid after SMF get_fileid call %lu", (unsigned long int)fid);
             idmap_[did] = fid;
         }
     }

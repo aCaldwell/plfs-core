@@ -763,15 +763,15 @@ plfs_error_t Util::Writen(const void *vptr, size_t n, IOSHandle *hand,
     nleft = n;
     *bytes_writen = n;
     while (nleft > 0) {
-        ret = hand->Write(ptr, nleft, &nwritten);
-        if (ret != PLFS_SUCCESS) {
-            if (ret != PLFS_EINTR) {
-                break;
-            }
-        } else {
-            nleft -= nwritten;
-            ptr   += nwritten;
-        }
+      ret = hand->Write(ptr, nleft, &nwritten);
+      if (ret != PLFS_SUCCESS) {
+	if (ret != PLFS_EINTR) {
+	  break;
+	}
+      } else {
+	nleft -= nwritten;
+	ptr   += nwritten;
+      }
     }
     EXIT_UTIL;
 }

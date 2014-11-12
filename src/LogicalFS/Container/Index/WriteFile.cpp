@@ -114,7 +114,7 @@ plfs_error_t WriteFile::sync()
     Util::MutexUnlock( &data_mux, __FUNCTION__ );
 
     // now sync the index
-    Util::MutexLock( &index_mux, __FUNCTION__ );
+    /*    Util::MutexLock( &index_mux, __FUNCTION__ );
     if ( ret == PLFS_SUCCESS ) {
         index->flush();
     }
@@ -126,6 +126,7 @@ plfs_error_t WriteFile::sync()
         ret = syncfh->Fsync();
     }
     Util::MutexUnlock( &index_mux, __FUNCTION__ );
+    */
     return ret;
 }
 
@@ -138,7 +139,7 @@ plfs_error_t WriteFile::sync( pid_t pid )
         // ugh, sometimes FUSE passes in weird pids, just ignore this
         //ret = -ENOENT;
     } else {
-        ret = ofh->fh->Fsync();
+      /*        ret = ofh->fh->Fsync();
         Util::MutexLock( &index_mux, __FUNCTION__ );
         if ( ret == PLFS_SUCCESS ) {
             index->flush();
@@ -150,7 +151,7 @@ plfs_error_t WriteFile::sync( pid_t pid )
             //XXXCDC:iostore maybe index->flush() should have a sync param?
             ret  = syncfh->Fsync();
         }
-        Util::MutexUnlock( &index_mux, __FUNCTION__ );
+        Util::MutexUnlock( &index_mux, __FUNCTION__ );*/
     }
     return ret;
 }
@@ -374,11 +375,12 @@ plfs_error_t WriteFile::closeFh(IOSHandle *fh)
     map<IOSHandle *,string>::iterator paths_itr;
     paths_itr = paths.find( fh );
     string path = ( paths_itr == paths.end() ? "ENOENT?" : paths_itr->second );
-    plfs_error_t ret = this->subdirback->store->Close(fh);
+    plfs_error_t ret = PLFS_SUCCESS;
+    //    plfs_error_t ret = this->subdirback->store->Close(fh);
     mlog(WF_DAPI, "%s:%s closed fh %p for %s: %d %s",
          __FILE__, __FUNCTION__, fh, path.c_str(), ret,
          ( ret != PLFS_SUCCESS ? strplfserr(ret) : "success" ) );
-    paths.erase ( fh );
+    //    paths.erase ( fh );
     return ret;
 }
 
@@ -430,6 +432,7 @@ WriteFile::extend( off_t offset )
 plfs_error_t
 WriteFile::prepareForWrite( pid_t pid )
 {
+  
     plfs_error_t ret = PLFS_SUCCESS;
     OpenFh *ofh;
 
@@ -445,16 +448,16 @@ WriteFile::prepareForWrite( pid_t pid )
                                      this->container_path, this->canback,
                                      &num_writers);
     }
-
+    
     // we also defer creating index dropping. so index may be NULL.
-    if ( ret == PLFS_SUCCESS && index == NULL ) {
+        if ( ret == PLFS_SUCCESS && index == NULL ) {
         ret = openIndex( pid );
         if ( ret != PLFS_SUCCESS ) {
             mlog( WF_ERR, "%s open index failed", __FUNCTION__ );
         }
     }
-
-    return ret;
+    
+    return PLFS_SUCCESS;
 }
 
 // we are currently doing synchronous index writing.
@@ -497,64 +500,62 @@ WriteFile::write(struct mdhim_t *md, const char *buf, size_t size, off_t offset,
         }
         end = Util::getTime();
         // then the index
-        if ( ret == PLFS_SUCCESS ) {
-            write_count++;
-            Util::MutexLock(   &index_mux , __FUNCTION__);
+	//        if ( ret == PLFS_SUCCESS ) {
+	write_count++;
+	Util::MutexLock(   &index_mux , __FUNCTION__);
             //mdhim-mod-put at
             //index->addWrite( offset, written, pid, begin, end );
-            index->addWrite( plfs_record, offset, written, pid, begin, end );
+	index->addWrite( plfs_record, offset, written, pid, begin, end );
             //mdhim-mod-put at
             // TODO: why is 1024 a magic number?
-            int flush_count = 1024;
-            if (write_count%flush_count==0) {
-                mlog(PLFS_DBG, "XXXACXXX - src/LogicalFS/Container/Index/WriteFile::%s: call to index->flush\n", __FUNCTION__);
-                ret = index->flush();
-                // Check if the index has grown too large stop buffering
-                if(index->memoryFootprintMBs() > index_buffer_mbs) {
-                    index->stopBuffering();
-                    mlog(WF_DCOMMON, "The index grew too large, "
-                         "no longer buffering");
-                }
-            }
-            if (ret == PLFS_SUCCESS) {
-                mlog(PLFS_DBG, "XXXACXXX - src/LogicalFS/Container/Index/WriteFile::%s: call to addWrite\n", __FUNCTION__);
-                addWrite(offset, size);    // track our own metadata
-                //mdhim-mod-put at
-                // This code places data into mdhim  addWrite was responsible for filling most of the mdhim data fields
-                //strcpy(plfs_record->dropping_file, this->container_path.c_str());
-                strcpy(plfs_record->dropping_file, Container::getDataPath(this->subdir_path, this->hostname, pid, createtime).c_str());
-                //return openFile(Container::getDataPath(path,host,p,createtime),m,ret_hand);
-                key = plfs_record->logical_offset;
-                mlog(PLFS_DBG, "XXXXmdhim-mod-put dropping file %s %s\n", plfs_record->dropping_file, __FUNCTION__);
-                mlog(PLFS_DBG, "XXXXmdhim-mod-put logical offsets %lld %s\n", (unsigned long long int)plfs_record->logical_offset, __FUNCTION__);
-                mlog(PLFS_DBG, "XXXXmdhim-mod-put chunk id %d %s\n", plfs_record->chunk_id, __FUNCTION__);
-                mlog(PLFS_DBG, "XXXXmdhim-mod-put physical offset %lld  %s\n", (unsigned long long int)plfs_record->physical_offset, __FUNCTION__);
-                mlog(PLFS_DBG, "XXXXmdhim-mod-put length %lld %s\n", (unsigned long long int)plfs_record->size, __FUNCTION__);
-
-
-
-
-                rm = mdhimPut(md, &key, sizeof(key), plfs_record, sizeof(plfs_put_record), NULL, NULL); 
-                if (!rm || rm->error) {
-                    mlog(PLFS_DBG, "Error inserting key/value into MDHIM WriteFile::%s\n", __FUNCTION__);
-                } else {
-                    mlog(PLFS_DBG, "Success inserting key/value into MDHIM WriteFile::%s\n", __FUNCTION__);
-                }
-
-                mdhim_full_release_msg(rm);
-                //Commit the database
-                int mret = mdhimCommit(md, md->primary_index);
-                if (mret != MDHIM_SUCCESS) {
-                    mlog(PLFS_DBG, "Error committing MDHIM database %s\n", __FUNCTION__);
-                } else {
-                    mlog(PLFS_DBG, "Committed MDHIM database %s\n", __FUNCTION__);
-                }
-
-                //mdhim-mod-put at
-            }
-            Util::MutexUnlock( &index_mux, __FUNCTION__ );
-        }
+	int flush_count = 1024;
+	if (write_count%flush_count==0) {
+	  mlog(PLFS_DBG, "XXXACXXX - src/LogicalFS/Container/Index/WriteFile::%s: call to index->flush\n", __FUNCTION__);
+	  ret = index->flush();
+	  // Check if the index has grown too large stop buffering
+	  if(index->memoryFootprintMBs() > index_buffer_mbs) {
+	    index->stopBuffering();
+	    mlog(WF_DCOMMON, "The index grew too large, "
+		 "no longer buffering");
+	  }
+	}
+        //    if (ret == PLFS_SUCCESS) {
+	mlog(PLFS_DBG, "XXXACXXX - src/LogicalFS/Container/Index/WriteFile::%s: call to addWrite\n", __FUNCTION__);
+	addWrite(offset, size);    // track our own metadata
+	//mdhim-mod-put at
+	// This code places data into mdhim  addWrite was responsible for filling most of the mdhim data fields
+	//strcpy(plfs_record->dropping_file, this->container_path.c_str());
+	strcpy(plfs_record->dropping_file, Container::getDataPath(this->subdir_path, this->hostname, pid, createtime).c_str());
+	//return openFile(Container::getDataPath(path,host,p,createtime),m,ret_hand);
+	key = offset;
+	mlog(PLFS_DBG, "XXXXmdhim-mod-put dropping file %s %s\n", plfs_record->dropping_file, __FUNCTION__);
+	mlog(PLFS_DBG, "XXXXmdhim-mod-put logical offsets %lld %s\n", (unsigned long long int)plfs_record->logical_offset, __FUNCTION__);
+	mlog(PLFS_DBG, "XXXXmdhim-mod-put chunk id %d %s\n", plfs_record->chunk_id, __FUNCTION__);
+	mlog(PLFS_DBG, "XXXXmdhim-mod-put physical offset %lld  %s\n", (unsigned long long int)plfs_record->physical_offset, __FUNCTION__);
+	mlog(PLFS_DBG, "XXXXmdhim-mod-put length %lld %s\n", (unsigned long long int)plfs_record->size, __FUNCTION__);
+	mlog(PLFS_DBG, "XXXXmdhim-mod-put key %lld %s\n", key, __FUNCTION__);	
+	//printf("Rank: %d, mdhim-mod-put key %lld\n", md->mdhim_rank, key);	
+	rm = mdhimPut(md, &key, sizeof(key), plfs_record, sizeof(plfs_put_record), NULL, NULL); 
+	if (!rm || rm->error) {
+	  mlog(PLFS_DBG, "Error inserting key/value into MDHIM WriteFile::%s\n", __FUNCTION__);
+	} else {
+	  mlog(PLFS_DBG, "Success inserting key/value into MDHIM WriteFile::%s\n", __FUNCTION__);
+	}
+	
+	mdhim_full_release_msg(rm);
+	//Commit the database
+	int mret = mdhimCommit(md, md->primary_index);
+	if (mret != MDHIM_SUCCESS) {
+	  mlog(PLFS_DBG, "Error committing MDHIM database %s\n", __FUNCTION__);
+	} else {
+	  mlog(PLFS_DBG, "Committed MDHIM database %s\n", __FUNCTION__);
+	}
+	
+	//mdhim-mod-put at
+	//    }
+	Util::MutexUnlock( &index_mux, __FUNCTION__ );
     }
+    //}
     *bytes_written = written;
     return ret;
 }
@@ -578,10 +579,11 @@ plfs_error_t WriteFile::openIndex( pid_t pid )
     /* note: this uses subdirback from obj to open */
     IOSHandle *fh;
     mlog(PLFS_DBG, "XXXACXXX - src/LogicalFS/Container/Index/WriteFile::%s: call to openIndexFile\n", __FUNCTION__);
-    ret = openIndexFile(subdir_path, hostname, pid, DROPPING_MODE,
-                        &index_path, &fh);
+    ret = openIndexFile(subdir_path, hostname, pid, /*DROPPING_MODE,*/
+                        &index_path/*, &fh*/);
     if ( ret == PLFS_SUCCESS ) {
         //XXXCDC:iostore need to pass the backend down into index?
+        fh = NULL;
         index = new Index(container_path, subdirback, fh);
         mlog(WF_DAPI, "In open Index path is %s",index_path.c_str());
         index->index_path = index_path;
@@ -654,14 +656,15 @@ plfs_error_t WriteFile::truncate( off_t offset )
 }
 
 /* uses this->subdirback to open */
-plfs_error_t WriteFile::openIndexFile(string path, string host, pid_t p, mode_t m,
-                                      string *index_path, IOSHandle **ret_hand)
+plfs_error_t WriteFile::openIndexFile(string path, string host, pid_t p, /*mode_t m,*/
+                                      string *index_path/*, IOSHandle **ret_hand*/)
 {
     mlog(PLFS_DBG, "XXXACXXX - ENTER src/LogicalFS/Container/Index/WriteFile::%s\n", __FUNCTION__);
     mlog(PLFS_DBG, "XXXACXXX - src/LogicalFS/Container/Index/WriteFile::%s: call to Container::getIndexPath\n", __FUNCTION__);
     *index_path = Container::getIndexPath(path,host,p,createtime);
     mlog(PLFS_DBG, "XXXACXXX - src/LogicalFS/Container/Index/WriteFile::%s: call to openFile\n", __FUNCTION__);
-    return openFile(*index_path,m,ret_hand);
+    //    return openFile(*index_path,m,ret_hand);
+    return PLFS_SUCCESS;
 }
 
 /* uses this->subdirback to open */

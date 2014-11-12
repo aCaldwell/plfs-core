@@ -95,7 +95,10 @@ SMF_Writer::add_single_record(const string &filename, enum SmallFileOps op,
     char buf[STACK_RECORD_SIZE];
     struct NameEntryHeader *header;
     plfs_error_t ret;
-
+ 
+    if (fileid == NULL ) {
+        mlog(SMF_INFO, "xxxATxxx In add_single record fileid is null");
+    }
     ret = require(WRITER_OPENNAMEFILE, NULL);
     if (ret != PLFS_SUCCESS) return ret;
     release(WRITER_OPENNAMEFILE, NULL);
@@ -114,9 +117,13 @@ SMF_Writer::add_single_record(const string &filename, enum SmallFileOps op,
         if (op == SM_OPEN) {
             index_mapping_t rec_meta(*fileid, dropping_id);
             meta->update(header, &rec_meta);
+            mlog(SMF_INFO, "xxxATxxx In add_single record if meta");
         } else {
             meta->update(header, NULL);
         }
+    }
+    if (fileid == NULL ) {
+        mlog(SMF_INFO, "xxxATxxx end add_single record fileid is null");
     }
     if (recordsize > STACK_RECORD_SIZE) free(header);
     return ret;
@@ -253,6 +260,7 @@ SMF_Writer::get_fileid(const string &filename, InMemoryCache *meta) {
     FileID fileid = INVALID_FILEID;
     plfs_error_t ret;
 
+    mlog(SMF_INFO, "xxxATxxx In SMF get_fileid");
     ret = add_single_record(filename, SM_OPEN, (off_t *)&fileid, meta);
     if (ret != PLFS_SUCCESS) {
         mlog(SMF_ERR, "Cannot append open record for file %s.",

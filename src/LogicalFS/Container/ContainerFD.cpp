@@ -11,6 +11,10 @@
 #include "mdhim_options.h"
 #include "partitioner_define.h"
 #include <unistd.h>
+<<<<<<< HEAD
+=======
+#include <sys/time.h>
+>>>>>>> 2b9b92af34d08d2f21c085f7445f6beda323bd07
 // XXX AC: mdhim-mod
 
 // TODO:
@@ -219,6 +223,7 @@ Container_fd::open(struct plfs_physpathinfo *ppip, int flags, pid_t pid,
       mlog(PLFS_DBG2, "open_opt not NULL mdhim_init =%d %s\n",open_opt->mdhim_init,ppip->filename);
       if (open_opt->mdhim_init) {
             db_opts = mdhim_options_init();
+<<<<<<< HEAD
             mdhim_options_set_db_path(db_opts, const_cast<char *>("/panfs/pas12a/vol1/atorrez/mdhim-data/db-test/"));
             mdhim_options_set_db_name(db_opts, const_cast<char *>(ppip->filename));
             mdhim_options_set_db_type(db_opts, LEVELDB);
@@ -226,6 +231,18 @@ Container_fd::open(struct plfs_physpathinfo *ppip, int flags, pid_t pid,
             mdhim_options_set_debug_level(db_opts, MLOG_CRIT);
             mdhim_options_set_value_append(db_opts, 0);
             mdhim_options_set_server_factor(db_opts, 2);
+=======
+            //mdhim_options_set_db_path(db_opts, const_cast<char *>("/panfs/pas12a/vol1/hng/mdhim-data/db-test/"));
+            mdhim_options_set_db_path(db_opts, const_cast<char *>("/panfs/pas12a/vol1/acaldwell/mdhim-data/db-test/"));
+            //mdhim_options_set_db_path(db_opts, const_cast<char *>("/turquoise/usr/projects/plfs/rrz/mdhim-scratch/"));
+            mdhim_options_set_db_name(db_opts, const_cast<char *>(ppip->filename));
+            mdhim_options_set_db_type(db_opts, LEVELDB);
+            mdhim_options_set_max_recs_per_slice(db_opts, 1048576);
+            mdhim_options_set_key_type(db_opts, MDHIM_LONG_INT_KEY);
+            mdhim_options_set_debug_level(db_opts, MLOG_CRIT);
+            mdhim_options_set_value_append(db_opts, 0);
+            mdhim_options_set_server_factor(db_opts, 1);
+>>>>>>> 2b9b92af34d08d2f21c085f7445f6beda323bd07
             mlog(PLFS_DBG2, "XXXatXXX - Done initing opts %s\n",ppip->filename);
             md = mdhimInit(open_opt->mdhim_comm, db_opts);
             ret = PLFS_SUCCESS;
@@ -326,14 +343,16 @@ Container_fd::open(struct plfs_physpathinfo *ppip, int flags, pid_t pid,
             db_opts = mdhim_options_init();
 //            //mdhim_options_set_db_path(db_opts, const_cast<char *>("/lustre/lscratch/atorrez/mdhim-data/db-offsets/"));
             //mdhim_options_set_db_path(db_opts, const_cast<char *>("/lustre/lscratch/atorrez/mdhim-data/db-put-test/"));
-            mdhim_options_set_db_path(db_opts, const_cast<char *>("/panfs/pas12a/vol1/atorrez/mdhim-data/db-test/"));
+            //mdhim_options_set_db_path(db_opts, const_cast<char *>("/panfs/pas12a/vol1/hng/mdhim-data/db-test/"));
+            mdhim_options_set_db_path(db_opts, const_cast<char *>("/panfs/pas12a/vol1/acaldwell/mdhim-data/db-test/"));
+            //mdhim_options_set_db_path(db_opts, const_cast<char *>("/turquoise/usr/projects/plfs/rrz/mdhim-scratch/"));
 //            //mdhim_options_set_db_path(db_opts, const_cast<char *>("/users/atorrez/usr-project-test/"));
             mdhim_options_set_db_name(db_opts, const_cast<char *>(ppip->filename));
 //            // Should be user defined
             mdhim_options_set_db_type(db_opts, LEVELDB);
             mdhim_options_set_key_type(db_opts, MDHIM_LONG_INT_KEY);
             mdhim_options_set_debug_level(db_opts, MLOG_CRIT);
-//            //mdhim_options_set_max_recs_per_slice(db_opts, 4);
+            mdhim_options_set_max_recs_per_slice(db_opts, 1048576);
 //            //mdhim_options_set_server_factor(db_opts, 4);
 //            //mdhim_options_set_value_append(db_opts, 0);
 //            //mdhim_options_set_max_recs_per_slice(db_opts, 1);
@@ -344,7 +363,7 @@ Container_fd::open(struct plfs_physpathinfo *ppip, int flags, pid_t pid,
 //            //char pass[]="pass";
 //            //char stater[]="stater";
 //            //mdhim_options_set_max_recs_per_slice(db_opts, 1000);
-            mdhim_options_set_server_factor(db_opts, 2);
+            mdhim_options_set_server_factor(db_opts, 1);
 //            //mdhim_options_set_login_c(db_opts, host, root, pass, stater, pass);
             mdhim_options_set_value_append(db_opts, 0);
 //            //mdhim_options_set_num_worker_threads(db_opts, 2);
@@ -451,7 +470,8 @@ Container_fd::close(pid_t pid, uid_t uid, int open_flags,
     WriteFile *wf    = this->fd->getWritefile();
     Index     *index = this->fd->getIndex();
     size_t writers = 0, readers = 0, ref_count = 0;
-    int stat_ret;
+    //int stat_ret;
+    //    struct timeval tv_start, tv_end;
     // be careful.  We might enter here when we have both writers and readers
     // make sure to remove the appropriate open handle for this thread by
     // using the original open_flags
@@ -538,14 +558,20 @@ Container_fd::close(pid_t pid, uid_t uid, int open_flags,
     //mdhim-mod-put at
     if (md != NULL) {
         //Stat flush MDHIM for possible MDHIM_GET_PREV/NEXT 
-        stat_ret  = mdhimStatFlush(md, md->primary_index);
+        /*stat_ret  = mdhimStatFlush(md, md->primary_index);
         if(stat_ret != MDHIM_SUCCESS) {
             //mlog(PLFS_DCOMMON, "Error when trying to mdhimStatFlush"); 
             ret = PLFS_SUCCESS; 
         }else{
             ret = PLFS_SUCCESS; 
-        }
+        }*/
+//	gettimeofday(&tv_start, NULL);
+//	printf("Calling mdhimClose\n");
         mdhimClose(md);
+//	printf("Finished calling mdhimClose\n");
+//	gettimeofday(&tv_end, NULL);
+//	printf("Took: %lu seconds to call mdhimClose\n", tv_end.tv_sec - tv_start.tv_sec);
+>>>>>>> 2b9b92af34d08d2f21c085f7445f6beda323bd07
     } 
     //
     //mlog(PLFS_DCOMMON, "Return from Call mdhimclose");
