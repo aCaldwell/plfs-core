@@ -6,11 +6,13 @@ class Container_OpenFile;   /* forward decl. */
  */
 struct index_record {
     bool hole;                      /* set to true if we hit a hole */
-    string datapath;                /* bpath to data dropping */
-    struct plfs_backend *databack;  /* backend datapath resides on */
+    bool lastrecord;                /* true if we hit EOF (?) */
+    unsigned int chunk_id;          /* Used for IDing dropping files */
     off_t chunk_offset;             /* offset of data in datapath file */
     size_t length;                  /* number of bytes we can read here */
-    bool lastrecord;                /* true if we hit EOF (?) */
+    off_t logical_offset;           /* The logical offset of the data */
+    string datapath;                /* bpath to data dropping */
+    struct plfs_backend *databack;  /* backend datapath resides on */
 
     /*
      * XXX: could put other stuff in here?  e.g. a data checksum?
