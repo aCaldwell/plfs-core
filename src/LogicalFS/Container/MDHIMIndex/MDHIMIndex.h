@@ -2,6 +2,8 @@
  * MDHIMIndex.h  all structures for the MDHIM index
  */
 
+#include "mdhim.h"
+
 /**
  * MDHIMIndex: MDHIM instance of PLFS container index
  */
@@ -41,6 +43,8 @@ public:
                                                off_t offset);
     plfs_error_t index_droppings_unlink(struct plfs_physpathinfo *ppip);
     plfs_error_t index_droppings_zero(struct plfs_physpathinfo *ppip);
+
+    friend ostream& operator <<(ostream&, const MDHIMIndex&);
 
  private:
     mdhim_t *mdhix;   /* handle to any open mdhim index */

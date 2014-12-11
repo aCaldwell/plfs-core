@@ -28,6 +28,42 @@ struct plfs_pathback {
     struct plfs_backend *back;  /*!< backend for the bpath */
 };
 
+
+/*
+ *  MdhimOpts: describes the options set by the user to be used in MDHIM
+ */
+struct MdhimOpts {
+    int db_create_new;                // Whether or not to create a new DB
+    int db_key_type;                  // The type of the key being used in the DB
+    int db_type;                      // The DB being used (LEVELDB, ROCKSDB, or MYSQL)
+    int db_value_append;              // Are we appending to current records
+    int num_paths;                    // Number of paths to the DB
+    int num_wthreads;                 // Number of worker threads being utilized
+    int rserver_factor;               // How many range servers per rank
+    int debug_level;                  // Level of debug information
+
+    //uint64_t max_recs_per_slice;      // How many records to use per slice
+
+    char *db_name;                    // DB name
+    char *db_path;                    // Path to DB
+
+    /* Database login credentials */
+    char *db_host;                    // DB host
+    char *db_upswd;                   // User password
+    char *db_user;                    // User name
+    char *dbs_host;                   // DB host
+    char *dbs_upswd;                  // User password
+    char *dbs_user;                   // User name
+
+    char *manifest_path;              // path to the mdhim_manifest file
+    char **db_paths;                  // Paths to the DB
+
+    string *err_msg;                  // to report errors in mdhim options parsing
+    
+};               /* ----------  end of struct MdhimOpts  ---------- */
+
+typedef struct MdhimOpts MdhimOpts;
+
 /*
  * PlfsMount: describes a PLFS mount point.   the mount point is backed
  * by one or more backend filesystems.
@@ -60,6 +96,9 @@ typedef struct  PlfsMount {
     struct plfs_backend **backends;             /*!< all backends */
     struct plfs_backend **canonical_backends;   /*!< ok for canonical */
     struct plfs_backend **shadow_backends;      /*!< ok for shadow */
+
+    struct MdhimOpts *mdhim_opts;        // options to set up MDHIM 
+
     string *err_msg; /* to report errors in mount parsing */
 } PlfsMount;
 
