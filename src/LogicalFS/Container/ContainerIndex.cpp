@@ -27,7 +27,7 @@ int container_index_id(const char *spec) {
  * @param pmnt the mount we are using (to get type value)
  * @return the new index
  */
-class ContainerIndex *container_index_alloc(PlfsMount *pmnt) {
+class ContainerIndex *container_index_alloc(PlfsMount *pmnt, Plfs_open_opt *oopt) {
     ContainerIndex *ci;
 
     switch (pmnt->fileindex_type) {
@@ -38,10 +38,10 @@ class ContainerIndex *container_index_alloc(PlfsMount *pmnt) {
     case CI_PATTERN:
         ci = new PatternIndex(pmnt);
         break;
-    case CI_MDHIM:
-        ci = new MDHIMIndex(pmnt);
-        break;
 #endif        
+    case CI_MDHIM:
+        ci = new MDHIMIndex(pmnt, oopt);
+        break;
     default:
         ci = NULL;
         mlog(CON_CRIT, "container_index_alloc: unknown type %d",

@@ -8,6 +8,32 @@
 #include "SmallFileFS.h"
 
 void
+set_default_mdhim(MdhimOpts *mdopts)
+{
+    mdopts->db_create_new      = 1;
+    mdopts->db_key_type        = 1;
+    mdopts->db_type            = 2;
+    mdopts->db_value_append    = 0;
+    mdopts->num_paths          = 0;
+    mdopts->num_wthreads       = 1;
+    mdopts->rserver_factor     = 4;
+    mdopts->max_recs_per_slice = 100000;
+    mdopts->debug_level        = 1;
+    mdopts->db_name            = NULL;
+    mdopts->db_path            = NULL;
+    mdopts->db_host            = NULL;
+    mdopts->db_upswd           = NULL;
+    mdopts->db_user            = NULL;
+    mdopts->dbs_host           = NULL;
+    mdopts->dbs_upswd          = NULL;
+    mdopts->dbs_user           = NULL;
+    mdopts->manifest_path      = NULL;
+    mdopts->db_paths           = NULL;
+    mdopts->err_msg            = NULL;
+
+}
+
+void
 set_default_mount(PlfsMount *pmnt)
 {
     pmnt->statfs = pmnt->syncer_ip = NULL;
@@ -24,6 +50,7 @@ set_default_mount(PlfsMount *pmnt)
     pmnt->attached = pmnt->nback = pmnt->ncanback = pmnt->nshadowback = 0;
     pmnt->backstore = NULL;
     pmnt->backends = pmnt->canonical_backends = pmnt->shadow_backends = NULL;
+    pmnt->mdhim_opts = NULL;
     pmnt->err_msg = NULL;
 }
 
@@ -121,7 +148,11 @@ string Valid_Keys[] = {
     "syncer_ip", "global_summary_dir", "statfs", "test_metalink", 
     "mlog_defmask", "mlog_setmasks", "mlog_stderrmask", "mlog_stderr", 
     "mlog_file", "mlog_msgbuf_size", "mlog_syslog", "mlog_syslogfac", 
-    "mlog_ucon", "include", "type", "compress_contiguous", "mdhim_options"
+    "mlog_ucon", "include", "type", "compress_contiguous", "mdhim_options",
+    "db_create_new", "db_host", "db_key_type", "db_name", "db_path",
+    "db_paths", "db_type", "db_upswd", "db_user", "db_value_append",
+    "dbs_host", "dbs_upswd", "dbs_user", "debug_level", "manifest_path",
+    "max_recs_per_slice", "num_paths", "num_wthreads", "rserver_factor"
 };
 
 /*
@@ -199,68 +230,131 @@ namespace YAML {
    template<>
    struct convert<MdhimOpts> {
        static bool decode(const Node& node, MdhimOpts& md_opt) {
-           mlog(MLOG_DBG, "XXXACXXX - Found MDHIM Options\n");
-           if(node["mdhim_options"]) {
-               if(node["db_create_new"]) {
-                   if(!conv(node["db_create_new"], md_opt.db_create_new) ||
-                      md_opt.db_create_new < 0 || md_opt.db_create_new > 1)
+           if(!node.IsSequence()) {
+               return false;
+           }
+           set_default_mdhim(&md_opt);
+           for(unsigned i=0; i<node.size(); i++) {
+               const Node cnode = node[i];
+               if(cnode["db_create_new"]) {
+                   if(!conv(cnode["db_create_new"], md_opt.db_create_new) ||
+                      (md_opt.db_create_new < 0 || md_opt.db_create_new > 1)) 
                        md_opt.err_msg = new string ("Illegal db_create_new");
                }
-               if(node["db_key_type"]) {
-                   if(!conv(node["db_key_type"], md_opt.db_key_type) ||
-                      md_opt.db_key_type < 1 || md_opt.db_key_type > 6)
+               if(cnode["db_key_type"]) {
+                   if(!conv(cnode["db_key_type"], md_opt.db_key_type) ||
+                      (md_opt.db_key_type < 1 || md_opt.db_key_type > 6))
                        md_opt.err_msg = new string ("Illegal db_key_type");
                }
-               if(node["db_type"]) {
-                   if(!conv(node["db_type"], md_opt.db_type) ||
+               if(cnode["db_type"]) {
+                   if(!conv(cnode["db_type"], md_opt.db_type) ||
                       (md_opt.db_type != 1 || md_opt.db_type != 3 || md_opt.db_type != 4))
                        md_opt.err_msg = new string ("Illegal db_type");
                }
-               if(node["db_value_append"]){
-                   if(!conv(node["db_value_append"], md_opt.db_value_append) ||
-                      md_opt.db_value_append < 0 || md_opt.db_value_append > 1)
+               if(cnode["db_value_append"]){
+                   if(!conv(cnode["db_value_append"], md_opt.db_value_append) ||
+                      (md_opt.db_value_append < 0 || md_opt.db_value_append > 1))
                        md_opt.err_msg = new string ("Illegal db_value_append");
                }
-               if(node["num_paths"]) {
-                   if(!conv(node["num_paths"], md_opt.num_paths) ||
+               if(cnode["num_paths"]) {
+                   if(!conv(cnode["num_paths"], md_opt.num_paths) ||
                       md_opt.num_paths <= 0)
                        md_opt.err_msg = new string ("Illegal num_paths");
                }
-               if(node["num_wthreads"]) {
-                   if(!conv(node["num_wtreads"], md_opt.num_wthreads) ||
+               if(cnode["num_wthreads"]) {
+                   if(!conv(cnode["num_wtreads"], md_opt.num_wthreads) ||
                       md_opt.num_wthreads <= 0)
                        md_opt.err_msg = new string ("Illegal num_wthreads");
                }
-               if(node["rserver_factor"]) {
-                   if(!conv(node["rserver_factor"], md_opt.rserver_factor) ||
+               if(cnode["rserver_factor"]) {
+                   if(!conv(cnode["rserver_factor"], md_opt.rserver_factor) ||
                       md_opt.rserver_factor <= 0)
                        md_opt.err_msg = new string ("Illegal rserver_factor");
                }
-               if(node["debug_level"]) {
-                   if(!conv(node["debug_level"], md_opt.debug_level))
+               if(cnode["debug_level"]) {
+                   if(!conv(cnode["debug_level"], md_opt.debug_level))
                        md_opt.err_msg = new string ("Illegal debug_level");
                }
-/*                if(node["max_recs_per_slice"]) {
- *                    if(!conv(node["max_recs_per_slice"], md_opt.max_recs_per_slice))
- *                        md_opt.err_msg = new string ("Illegal max_recs_per_slice");
- *                }
- */
-               if(node["db_name"]) {
+
+               if(cnode["max_recs_per_slice"]) {
+                   if(!conv(cnode["max_recs_per_slice"], md_opt.max_recs_per_slice))
+                       md_opt.err_msg = new string ("Illegal max_recs_per_slice");
+               }
+
+               if(cnode["db_name"]) {
                    string temp_s;
-                   if(!conv(node["db_name"], temp_s))
+                   if(!conv(cnode["db_name"], temp_s))
                        md_opt.err_msg = new string ("Illegal db_name");
                    else {
                        md_opt.db_name = strdup(temp_s.c_str());
                    }
                }
-               if(node["db_path"]) {
+               if(cnode["db_path"]) {
                    string temp_s;
-                   if(!conv(node["db_path"], temp_s) )
+                   if(!conv(cnode["db_path"], temp_s) )
                        md_opt.err_msg = new string ("Illegal db_path");
+                   else {
+                       md_opt.db_path = strdup(temp_s.c_str());
+                   }
                }
-               return true;
+               if(cnode["db_host"]) {
+                   string temp_s;
+                   if(!conv(cnode["db_host"], temp_s) )
+                       md_opt.err_msg = new string ("Illegal db_host");
+                   else {
+                       md_opt.db_host = strdup(temp_s.c_str());
+                   }
+               }
+               if(cnode["db_upswd"]) {
+                   string temp_s;
+                   if(!conv(cnode["db_upswd"], temp_s) )
+                       md_opt.err_msg = new string ("Illegal db_upswd");
+                   else {
+                       md_opt.db_upswd = strdup(temp_s.c_str());
+                   }
+               }
+               if(cnode["db_user"]) {
+                   string temp_s;
+                   if(!conv(cnode["db_user"], temp_s) )
+                       md_opt.err_msg = new string ("Illegal db_user");
+                   else {
+                       md_opt.db_user = strdup(temp_s.c_str());
+                   }
+               }
+               if(cnode["dbs_host"]) {
+                   string temp_s;
+                   if(!conv(cnode["dbs_host"], temp_s) )
+                       md_opt.err_msg = new string ("Illegal dbs_host");
+                   else {
+                       md_opt.dbs_host = strdup(temp_s.c_str());
+                   }
+               }
+               if(cnode["dbs_upswd"]) {
+                   string temp_s;
+                   if(!conv(cnode["dbs_upswd"], temp_s) )
+                       md_opt.err_msg = new string ("Illegal dbs_upswd");
+                   else {
+                       md_opt.dbs_upswd = strdup(temp_s.c_str());
+                   }
+               }
+               if(cnode["dbs_user"]) {
+                   string temp_s;
+                   if(!conv(cnode["dbs_user"], temp_s) )
+                       md_opt.err_msg = new string ("Illegal dbs_user");
+                   else {
+                       md_opt.dbs_user = strdup(temp_s.c_str());
+                   }
+               }
+               if(cnode["manifest_path"]) {
+                   string temp_s;
+                   if(!conv(cnode["manifest_path"], temp_s) )
+                       md_opt.err_msg = new string ("Illegal manifest_path");
+                   else {
+                       md_opt.manifest_path = strdup(temp_s.c_str());
+                   }
+               }
            }
-           return false;
+           return true;
        }
    };
 
@@ -496,7 +590,6 @@ namespace YAML {
                                (temp2 == "") ?
                                CI_BYTERANGE /* default */ :
                                container_index_id(temp2.c_str());
-                           mlog(MLOG_DBG, "XXXACXXX - checking for MDHIM directive\n");
                            pmntp.fs_ptr = &containerfs;
                            if (pmntp.fileindex_type == CI_UNKNOWN) {
                                pmntp.err_msg = new
@@ -596,6 +689,10 @@ namespace YAML {
                    catch (exception &e) {
                         pmntp.err_msg = new string(e.what());
                    }
+
+                   if(pmntp.mdhim_opts->err_msg) {
+                       pmntp.err_msg = pmntp.mdhim_opts->err_msg;
+                   }
                }else if(!node["mdhim_options"] && pmntp.fileindex_type == CI_MDHIM) {
                    mlog(MLOG_DBG, "Using default MDHIM settings.\n");
                }
@@ -605,7 +702,7 @@ namespace YAML {
        }
    };
 }
-
+                                       
 PlfsConf *
 parse_conf(YAML::Node cnode, string file, PlfsConf *pconf)
 {

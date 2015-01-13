@@ -5,6 +5,7 @@
 #include "IOStore.h"
 #include "LogicalFS.h"
 #include <syslog.h>
+#include <stdint.h>
 
 /*
  * plfs_backend: describes a single backend filesystem.   each mount
@@ -37,12 +38,12 @@ struct MdhimOpts {
     int db_key_type;                  // The type of the key being used in the DB
     int db_type;                      // The DB being used (LEVELDB, ROCKSDB, or MYSQL)
     int db_value_append;              // Are we appending to current records
+    int debug_level;                  // Level of debug information
     int num_paths;                    // Number of paths to the DB
     int num_wthreads;                 // Number of worker threads being utilized
     int rserver_factor;               // How many range servers per rank
-    int debug_level;                  // Level of debug information
 
-    //uint64_t max_recs_per_slice;      // How many records to use per slice
+    uint64_t max_recs_per_slice;      // How many records to use per slice
 
     char *db_name;                    // DB name
     char *db_path;                    // Path to DB
@@ -136,6 +137,9 @@ typedef struct PlfsConf {
     /* File to dump fuse errors to regardless of mlog configuration */
     char *fuse_crash_log;
 } PlfsConf;
+
+void
+set_default_mdhim(MdhimOpts *mdopts);
 
 void
 set_default_mount(PlfsMount *pmnt);

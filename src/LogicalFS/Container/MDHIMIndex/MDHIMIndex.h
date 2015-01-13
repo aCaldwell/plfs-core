@@ -2,15 +2,15 @@
  * MDHIMIndex.h  all structures for the MDHIM index
  */
 
-#include "mdhim.h"
+//#include "mdhim.h"
 
 /**
  * MDHIMIndex: MDHIM instance of PLFS container index
  */
 class MDHIMIndex : ContainerIndex {
 public:
-    MDHIMIndex();    /* constructor */
-    ~MDHIMIndex();   /* destructor */
+    MDHIMIndex(PlfsMount *pmnt, Plfs_open_opt *oopt);  /* constructor */
+    ~MDHIMIndex();                /* destructor */
 
     const char *index_name(void) { return("MDHIM"); };
 
@@ -46,8 +46,10 @@ public:
 
     friend ostream& operator <<(ostream&, const MDHIMIndex&);
 
- private:
-    mdhim_t *mdhix;   /* handle to any open mdhim index */
+private:
+    struct mdhim_t *mdhix;     /* handle to any open mdhim index */
+    mdhim_options_t *db_opts;  /* handle to the database options for MDHIM */
+    int dirty_stat;            /* Flag to keep stats clean */
 
     /*
      * additional state needed:
@@ -71,4 +73,3 @@ public:
      * to use.
      */
 };
-

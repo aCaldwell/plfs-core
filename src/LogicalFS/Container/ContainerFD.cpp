@@ -494,7 +494,7 @@ Container_fd::establish_helper(struct plfs_physpathinfo *ppip, int my_rwarg,
     cof->mode = mode;
 
     /* allocate an index */
-    cof->cof_index = container_index_alloc(ppip->mnt_pt);
+    cof->cof_index = container_index_alloc(ppip->mnt_pt, open_opt);
     if (cof->cof_index == NULL) {
         ret = PLFS_ENOMEM;
         goto done;

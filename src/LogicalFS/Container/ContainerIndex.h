@@ -82,5 +82,5 @@ class ContainerIndex {
 #define CI_MDHIM     3
 #endif
 
-class ContainerIndex *container_index_alloc(PlfsMount *pmnt);
+class ContainerIndex *container_index_alloc(PlfsMount *pmnt, Plfs_open_opt *oopt);
 plfs_error_t container_index_free(ContainerIndex *ci);

@@ -591,6 +591,63 @@ print_backends(PlfsMount *pmnt, int simple, bool check_dirs,
     return(ret);
 }
 
+plfs_error_t
+print_mdhim_options(PlfsMount *pmnt, plfs_error_t ret)
+{
+    
+    if(pmnt->mdhim_opts) {
+        cout << "\tMDHIM Options:"
+            << "\n\t\tdb_create_new: " << pmnt->mdhim_opts->db_create_new
+            << "\n\t\tdb_key_type: " << pmnt->mdhim_opts->db_key_type
+            << "\n\t\tdb_type: " << pmnt->mdhim_opts->db_type
+            << "\n\t\tdb_value_append: " << pmnt->mdhim_opts->db_value_append
+            << "\n\t\tnum_paths: " << pmnt->mdhim_opts->num_paths
+            << "\n\t\tnum_wthreads: " << pmnt->mdhim_opts->num_wthreads
+            << "\n\t\trserver_factor: " << pmnt->mdhim_opts->rserver_factor
+            << "\n\t\tdebug_level: " << pmnt->mdhim_opts->debug_level
+            << "\n\t\tdb_name: " << (pmnt->mdhim_opts->db_name ? pmnt->mdhim_opts->db_name
+                                            : "Using MDHIM defualt (MdhimTstDB-)")
+            << "\n\t\tdb_path: " << (pmnt->mdhim_opts->db_path ? pmnt->mdhim_opts->db_path
+                                            : "Using MDHIM default (./)")
+            << "\n\t\tdb_host: " << (pmnt->mdhim_opts->db_host ? pmnt->mdhim_opts->db_host
+                                            : "Using MDHIM default (localhost)")
+            << "\n\t\tdb_upswd: " << (pmnt->mdhim_opts->db_upswd ? pmnt->mdhim_opts->db_upswd
+                                            : "Using MDHIM default (pass)")
+            << "\n\t\tdb_user: " << (pmnt->mdhim_opts->db_user ? pmnt->mdhim_opts->db_user
+                                            : "Using MDHIM default (test)")
+            << "\n\t\tdbs_host: " << (pmnt->mdhim_opts->dbs_host ? pmnt->mdhim_opts->db_host
+                                            : "Using MDHIM default (localhost)")
+            << "\n\t\tdbs_upswd: " << (pmnt->mdhim_opts->dbs_upswd ? pmnt->mdhim_opts->db_upswd
+                                            : "Using MDHIM default (pass)")
+            << "\n\t\tdbs_user: " << (pmnt->mdhim_opts->dbs_user ? pmnt->mdhim_opts->db_user
+                                            : "Using MDHIM default (test)")
+            << "\n\t\tmanifest_path: " << (pmnt->mdhim_opts->manifest_path ? pmnt->mdhim_opts->manifest_path
+                                            : "Using MDHIM default (./)")
+            << endl;
+    }else {
+        cout << "\tMDHIM Options:"
+            << "\n\t\tdb_create_new: Using MDHIM default (1)"
+            << "\n\t\tdb_key_type: Using MDHIM default (1)"
+            << "\n\t\tdb_type: Using MDHIM default (2)"
+            << "\n\t\tdb_value_append: Using MDHIM default (0)"
+            << "\n\t\tnum_paths: Using MDHIM default (0)"
+            << "\n\t\tnum_wthreads: Using MDHIM default (1)"
+            << "\n\t\trserver_factor: Using MDHIM default (4)"
+            << "\n\t\tdebug_level: Using MDHIM default (1)"
+            << "\n\t\tdb_name: Using MDHIM default (MdhimTstDB-)"
+            << "\n\t\tdb_path: Using MDHIM default (./)"
+            << "\n\t\tdb_host: Using MDHIM default (localhost)"
+            << "\n\t\tdb_upswd: Using MDHIM default (pass)"
+            << "\n\t\tdb_user: Using MDHIM default (test)"
+            << "\n\t\tdbs_host: Using MDHIM default (localhost)"
+            << "\n\t\tdbs_upswd: Using MDHIM default (pass)"
+            << "\n\t\tdbs_user: Using MDHIM default (test)"
+            << "\n\t\tmanifest_path: Using MDHIM default (./)"
+            << endl;
+    }
+    return(ret);
+}
+
 // returns PLFS_SUCCESS or PLFS_E*
 plfs_error_t
 plfs_dump_config(int check_dirs, int make_dir)
@@ -672,6 +729,15 @@ plfs_dump_config(int check_dirs, int make_dir)
                  : pmnt->file_type == SMALL_FILE ? "small_file (1-N)"
                  : "UNKNOWN.  WTF.  email plfs-devel@lists.sourceforge.net")
              << endl;
+        cout << "\tFile Index Type: "
+             << (pmnt->fileindex_type == CI_BYTERANGE ? "byterange"
+                : pmnt->fileindex_type == CI_MDHIM ? "MDHIM"
+                : pmnt->fileindex_type == CI_PATTERN ? "pattern matching"
+                : "UNKNOWN.   WTF.  email plfs-devel@list.sourceforge.net")
+             << endl;
+        if (pmnt->fileindex_type == CI_MDHIM ) {
+            print_mdhim_options(pmnt, ret);
+        }
         if (check_dirs && plfs_attach(pmnt) != PLFS_SUCCESS) {
             cout << "\tUnable to attach to mount point, disable check_dirs"
                  << endl;
