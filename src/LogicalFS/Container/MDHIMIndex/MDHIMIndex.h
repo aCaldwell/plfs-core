@@ -2,7 +2,18 @@
  * MDHIMIndex.h  all structures for the MDHIM index
  */
 
-//#include "mdhim.h"
+#include "mdhim.h"
+
+
+struct plfs_index_record {
+    unsigned int chunk_id;
+    off_t logical_offset;
+    unsigned long long int size;
+    unsigned long long int physical_offset;
+    char dropping_file[PATH_MAX];
+};               /* ----------  end of struct plfs_put_index_record  ---------- */
+
+typedef struct plfs_index_record Plfs_index_record;
 
 /**
  * MDHIMIndex: MDHIM instance of PLFS container index
@@ -50,6 +61,9 @@ private:
     struct mdhim_t *mdhix;     /* handle to any open mdhim index */
     mdhim_options_t *db_opts;  /* handle to the database options for MDHIM */
     int dirty_stat;            /* Flag to keep stats clean */
+    int stat_ret;              /* Has a stat been successfully performed */
+    Plfs_index_record *record; /* Structure to pass into MDHIM that will hold record
+                                  information */
 
     /*
      * additional state needed:

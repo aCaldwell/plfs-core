@@ -16,11 +16,22 @@
  * =====================================================================================
  */
 
+#include <stdio.h>
+#include <stdlib.h>
 #include "plfs_private.h"
 #include "Container.h"
 #include "ContainerIndex.h"
 #include "ContainerOpenFile.h"
 #include "MDHIMIndex.h"
+
+
+ostream &
+operator << ( ostream &os, const MDHIMIndex &obj )
+{
+    os << "# Index dump" << endl;
+    os << "# MDHIMmode=" << endl;
+    return os;
+}   /* -----  end of function operator <<  ----- */
 
 
 /*
@@ -68,18 +79,58 @@ MDHIMIndex::MDHIMIndex (PlfsMount *pmnt, Plfs_open_opt *oopt)
 }   /* -----  end of method MDHIMIndex::MDHIMIndex  (constructor)  ----- */
 
 
+
+/*
+ *--------------------------------------------------------------------------------------
+ *       Class:  MDHIMIndex
+ *      Method:  MDHIMIndex :: ~MDHIMIndex
+ * Description:  Destructor
+ *--------------------------------------------------------------------------------------
+ */
+MDHIMIndex::~MDHIMIndex()
+{
+    int closed = MDHIM_SUCCESS;
+    closed = mdhimClose(this->mdhix);
+    if(closed != MDHIM_SUCCESS) {
+        printf("Error closing MDHIM\n");
+    }
+
+    mdhim_options_destroy(this->db_opts);
+
+}		/* -----  end of method MDHIMIndex::~MDHIMIndex  ----- */
+
+/*
+ *--------------------------------------------------------------------------------------
+ *       Class:  MDHIMIndex
+ *      Method:  MDHIMIndex :: index_open
+ * Description:  This function will check if MDHIM was initialized and then check if 
+ *               A stat was ran to get the information about the data distribution.
+ *   Arguments:  <cof>: Container_OpenFile pointer
+ *               <rw_flags>: Combination of Posix file open flags (O_CREAT, O_TRUNC,
+ *                           O_RDWR, O_WONLY, O_RDONLY, etc)
+ *               <oopt>: Plfs_open_opt pointer
+ *      Return:  <ret>: PLFS error status
+ *--------------------------------------------------------------------------------------
+ */
 plfs_error_t
 MDHIMIndex::index_open ( Container_OpenFile *cof, int rw_flags,
                          Plfs_open_opt *oopt)
-{
+    {j
     int stat_ret;
-    int ret = PLFS_SUCCESS;
+    plfs_error_t ret = PLFS_SUCCESS;
 
+    if(!this->mdhix) {
+        ret = PLFS_EINVAL;
+    }
 
-    if(this->dirty_stat && (rw_flags == O_RDWR || rw_flags == O_RDONLY)) {
-        stat_ret = mdhimStatFlush(this->mdhix, this->mdhix->primary_index);
-        if(stat_ret != MDHIM_SUCCESS) {
-            ret = PLFS_EINVAL;
+    if (ret == PLFS_SUCCESS) {
+        if(this->dirty_stat && (rw_flags == O_RDWR || rw_flags == O_RDONLY)) {
+            stat_ret = mdhimStatFlush(this->mdhix, this->mdhix->primary_index);
+            if(stat_ret != MDHIM_SUCCESS) {
+                ret = PLFS_EINVAL;
+            }else {
+                this->dirty_stat = 0;
+            }
         }
     }
     return ret;
@@ -87,10 +138,30 @@ MDHIMIndex::index_open ( Container_OpenFile *cof, int rw_flags,
 
 
 
-ostream &
-operator << ( ostream &os, const MDHIMIndex &obj )
+/*
+ *--------------------------------------------------------------------------------------
+ *       Class:  MDHIMIndex
+ *      Method:  MDHIMIndex :: index_close
+ * Description:  Close (Nothing to do here because the Destructor will close MDHIM)
+ *--------------------------------------------------------------------------------------
+ */
+plfs_error_t
+MDHIMIndex::index_close()
 {
-    os << "# Index dump" << endl;
-    os << "# MDHIMmode=" << endl;
-    return os;
-}   /* -----  end of function operator <<  ----- */
+    return ;
+}		/* -----  end of method MDHIMIndex::index_close  ----- */
+
+
+/*
+ *--------------------------------------------------------------------------------------
+ *       Class:  MDHIMIndex
+ *      Method:  MDHIMIndex :: index_add
+ * Description:  Insert into MDHIM an index entry of the data_dropping files location 
+ *               and name, logical_offset, physical_offset
+ *--------------------------------------------------------------------------------------
+ */
+plfs_error_t
+MDHIMIndex::index_add (  )
+{
+    return ;
+}		/* -----  end of method MDHIMIndex::index_add  ----- */
