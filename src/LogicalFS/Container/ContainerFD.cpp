@@ -360,7 +360,7 @@ Container_fd::open(struct plfs_physpathinfo *ppip, int openflags, pid_t pid,
          * FUSE will route O_CREAT as its own call to f_mknod first,
          * and then call open.
          */
-        ret = containerfs.xcreate(ppip, mode, openflags, pid);
+        ret = containerfs.xcreate(ppip, mode, openflags, pid, open_opt);
         if (ret == PLFS_SUCCESS && (openflags & O_TRUNC)) {
             /*
              * NOTE: this assumes that containerfs.create does a truncate
@@ -376,7 +376,7 @@ Container_fd::open(struct plfs_physpathinfo *ppip, int openflags, pid_t pid,
          * FUSE will route O_TRUNC to is own call to f_truncate
          * prior to calling open.
          */
-        ret = containerfs.trunc(ppip, 0, (int)true);
+        ret = containerfs.trunc(ppip, 0, (int)true, open_opt);
         if (ret == 0) {
             truncated = true;
         }
@@ -993,7 +993,7 @@ truncate_helper_restorefds(Container_OpenFile *cof) {
 }
 
 plfs_error_t 
-Container_fd::trunc(off_t offset)
+Container_fd::trunc(off_t offset, Plfs_open_opt *oopt)
 {
     plfs_error_t ret = PLFS_SUCCESS;
     Container_OpenFile *cof;
@@ -1012,7 +1012,7 @@ Container_fd::trunc(off_t offset)
 
         /* zero_helper calls index_truncate on cof to handle index */
         Util::MutexLock(&cof->cof_mux, __FUNCTION__);
-        ret = containerfs_zero_helper(NULL, 1 /* open_file */, cof);
+        ret = containerfs_zero_helper(NULL, 1 /* open_file */, cof, oopt);
         if (ret == PLFS_SUCCESS) {
 
             /* need to resync our fds after truncate */
@@ -1025,7 +1025,7 @@ Container_fd::trunc(off_t offset)
 
         stbuf.st_size = 0;
         /* sz_only isn't accurate in this case, wire false */
-        ret = this->getattr(&stbuf, false /* sz_only */);
+        ret = this->getattr(&stbuf, false /* sz_only */, oopt);
 
         if (ret == PLFS_SUCCESS) {
             if (stbuf.st_size == offset) {
@@ -1089,7 +1089,7 @@ Container_fd::trunc(off_t offset)
 }
 
 plfs_error_t 
-Container_fd::getattr(struct stat *stbuf, int sz_only)
+Container_fd::getattr(struct stat *stbuf, int sz_only, Plfs_open_opt *oopt)
 {
     plfs_error_t ret = PLFS_SUCCESS; 
     Container_OpenFile *cof;
@@ -1115,7 +1115,7 @@ Container_fd::getattr(struct stat *stbuf, int sz_only)
         /* successfully skipped the heavyweight getattr call */
         ret = PLFS_SUCCESS;
     } else {
-        ret = Container::getattr(&cof->pathcpy, stbuf, cof);
+        ret = Container::getattr(&cof->pathcpy, stbuf, cof, oopt);
     }
     
     if (ret == PLFS_SUCCESS && writing) {

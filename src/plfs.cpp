@@ -220,7 +220,7 @@ plfs_close(Plfs_fd *fd, pid_t pid, uid_t u, int open_flags,
 }
 
 plfs_error_t
-plfs_create(const char *path, mode_t mode, int flags, pid_t pid)
+plfs_create(const char *path, mode_t mode, int flags, pid_t pid, Plfs_open_opt *open_opt)
 {
     plfs_error_t ret = PLFS_SUCCESS;
     struct plfs_physpathinfo ppi;
@@ -230,7 +230,7 @@ plfs_create(const char *path, mode_t mode, int flags, pid_t pid)
 
     ret = plfs_resolvepath(stripped_path, &ppi);
     if (ret == PLFS_SUCCESS) {
-        ret = ppi.mnt_pt->fs_ptr->create(&ppi, mode, flags, pid);
+        ret = ppi.mnt_pt->fs_ptr->create(&ppi, mode, flags, pid, open_opt);
     }
     else {
         ret = PLFS_EINVAL;
@@ -240,7 +240,7 @@ plfs_create(const char *path, mode_t mode, int flags, pid_t pid)
 }
 
 plfs_error_t
-plfs_getattr(Plfs_fd *fd, const char *path, struct stat *st, int size_only)
+plfs_getattr(Plfs_fd *fd, const char *path, struct stat *st, int size_only, Plfs_open_opt *oopt)
 {
     debug_enter(__FUNCTION__,path);
     plfs_error_t ret = PLFS_SUCCESS;
@@ -248,7 +248,7 @@ plfs_getattr(Plfs_fd *fd, const char *path, struct stat *st, int size_only)
     if (fd) {
         ret = plfs_sync(fd);   // sync before attr
         if (ret == PLFS_SUCCESS) {
-            ret = fd->getattr(st, size_only);
+            ret = fd->getattr(st, size_only, oopt);
         }
     } else {
         struct plfs_physpathinfo ppi;
@@ -257,7 +257,7 @@ plfs_getattr(Plfs_fd *fd, const char *path, struct stat *st, int size_only)
 
         ret = plfs_resolvepath(stripped_path, &ppi);
         if (ret == PLFS_SUCCESS) {
-            ret = ppi.mnt_pt->fs_ptr->getattr(&ppi, st, size_only);
+            ret = ppi.mnt_pt->fs_ptr->getattr(&ppi, st, size_only, oopt);
         }
         else {
             ret = PLFS_EINVAL;
@@ -499,7 +499,7 @@ plfs_readlink(const char *path, char *buf, size_t bufsize, int *bytes)
 }
 
 plfs_error_t
-plfs_rename(const char *from, const char *to)
+plfs_rename(const char *from, const char *to, Plfs_open_opt *oopt)
 {
     plfs_error_t ret = PLFS_SUCCESS;
     struct plfs_physpathinfo ppi, ppi_to;
@@ -522,7 +522,7 @@ plfs_rename(const char *from, const char *to)
     if (ppi.mnt_pt != ppi_to.mnt_pt) {
         ret = PLFS_EXDEV;  /* cross-device link */
     } else {
-        ret = ppi.mnt_pt->fs_ptr->rename(&ppi, &ppi_to);
+        ret = ppi.mnt_pt->fs_ptr->rename(&ppi, &ppi_to, oopt);
     }
 
  err:
@@ -616,7 +616,7 @@ plfs_sync(Plfs_fd *fd, pid_t pid)
 */
 
 plfs_error_t
-plfs_trunc(Plfs_fd *fd, const char *path, off_t offset, int open_file)
+plfs_trunc(Plfs_fd *fd, const char *path, off_t offset, int open_file, Plfs_open_opt *oopt)
 {
     debug_enter(__FUNCTION__,fd ? fd->backing_path():path);
     plfs_error_t ret;
@@ -624,12 +624,12 @@ plfs_trunc(Plfs_fd *fd, const char *path, off_t offset, int open_file)
     stripped_path = skipPrefixPath(path);
 
     if (fd) {
-        ret = fd->trunc(offset);
+        ret = fd->trunc(offset, oopt);
     } else {
         struct plfs_physpathinfo ppi;
         ret = plfs_resolvepath(stripped_path, &ppi);
         if (ret == PLFS_SUCCESS) {
-            ret = ppi.mnt_pt->fs_ptr->trunc(&ppi, offset, open_file);
+            ret = ppi.mnt_pt->fs_ptr->trunc(&ppi, offset, open_file, oopt);
         }
         else {
             ret = PLFS_EINVAL;
@@ -640,7 +640,7 @@ plfs_trunc(Plfs_fd *fd, const char *path, off_t offset, int open_file)
 }
 
 plfs_error_t
-plfs_unlink(const char *path)
+plfs_unlink(const char *path, Plfs_open_opt *oopt)
 {
     plfs_error_t ret = PLFS_SUCCESS;
     struct plfs_physpathinfo ppi;
@@ -650,7 +650,7 @@ plfs_unlink(const char *path)
 
     ret = plfs_resolvepath(stripped_path, &ppi);
     if (ret == PLFS_SUCCESS) {
-        ret = ppi.mnt_pt->fs_ptr->unlink(&ppi);
+        ret = ppi.mnt_pt->fs_ptr->unlink(&ppi, oopt);
     }
     else {
         ret = PLFS_EINVAL;

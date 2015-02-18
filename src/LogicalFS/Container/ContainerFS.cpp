@@ -274,7 +274,7 @@ file_operation(struct plfs_physpathinfo *ppip, FileOp& op)
  */
 static plfs_error_t
 containerfs_truncate_helper(struct plfs_physpathinfo *ppip,
-                            off_t offset, off_t cur_st_size, pid_t pid)
+                            off_t offset, off_t cur_st_size, pid_t pid, Plfs_open_opt *oopt)
 {
     plfs_error_t ret = PLFS_SUCCESS;
 
@@ -292,7 +292,7 @@ containerfs_truncate_helper(struct plfs_physpathinfo *ppip,
          * one in order to be able to call index_droppings_trunc().
          */
         ContainerIndex *ci;
-        ci = container_index_alloc(ppip->mnt_pt);
+        ci = container_index_alloc(ppip->mnt_pt, oopt);
         if (ci == NULL) {
             ret = PLFS_ENOMEM;
         } else {
@@ -378,7 +378,7 @@ containerfs_truncate_helper(struct plfs_physpathinfo *ppip,
  */
 plfs_error_t
 containerfs_zero_helper(struct plfs_physpathinfo *ppip, int open_file,
-                        Container_OpenFile *opencof)
+                        Container_OpenFile *opencof, Plfs_open_opt *oopt)
 {
     plfs_error_t ret;
     int got_ppip, got_cof;
@@ -455,7 +455,7 @@ containerfs_zero_helper(struct plfs_physpathinfo *ppip, int open_file,
 
         /* need to allocate a tmp index to truncate droppings */
         ContainerIndex *ci;
-        ci = container_index_alloc(ppip->mnt_pt);
+        ci = container_index_alloc(ppip->mnt_pt, oopt);
         if (ci == NULL) {
             ret = PLFS_ENOMEM;
             goto err_out;
@@ -542,7 +542,7 @@ ContainerFileSystem::open(Plfs_fd **pfd, struct plfs_physpathinfo *ppip,
  */
 plfs_error_t
 ContainerFileSystem::xcreate(struct plfs_physpathinfo *ppip, mode_t mode,
-                             int flags, pid_t pid)
+                             int flags, pid_t pid, Plfs_open_opt *oopt)
 {
     plfs_error_t ret = PLFS_SUCCESS;
 
@@ -587,7 +587,7 @@ ContainerFileSystem::xcreate(struct plfs_physpathinfo *ppip, mode_t mode,
     char *hostname;
     Util::hostname(&hostname);
     ret =  Container::create(ppip, hostname, mode, flags, &attempt,
-                             pid, lazy_subdir);
+                             pid, lazy_subdir, oopt);
     return(ret);
 }
 
@@ -629,7 +629,7 @@ ContainerFileSystem::access(struct plfs_physpathinfo *ppip, int mask)
 
 plfs_error_t
 ContainerFileSystem::rename(struct plfs_physpathinfo *ppip,
-                            struct plfs_physpathinfo *ppip_to)
+                            struct plfs_physpathinfo *ppip_to, Plfs_open_opt *oopt)
 {
     plfs_error_t ret = PLFS_SUCCESS;
     mode_t mode;
@@ -640,7 +640,7 @@ ContainerFileSystem::rename(struct plfs_physpathinfo *ppip,
 
     /* first check if there is a file already at dst.  If so, remove it. */
     if (is_container_file(ppip_to, NULL)) {
-        ret = ContainerFileSystem::unlink(ppip_to);
+        ret = ContainerFileSystem::unlink(ppip_to, oopt);
         if (ret) {
             return(PLFS_ENOENT);    /* should never happen; check anyway */
         }
@@ -654,7 +654,7 @@ ContainerFileSystem::rename(struct plfs_physpathinfo *ppip,
                              ppip_to->canbpath.c_str(),
                              ppip_to->canback->store);
         if (ret == PLFS_SUCCESS){
-            ret = ContainerFileSystem::unlink(ppip);
+            ret = ContainerFileSystem::unlink(ppip, oopt);
         }
         return(ret);
     }
@@ -665,7 +665,7 @@ ContainerFileSystem::rename(struct plfs_physpathinfo *ppip,
      * this function will not proceed because rename does not work
      * on a non-empty destination...
      */
-    ret = ContainerFileSystem::unlink(ppip_to);
+    ret = ContainerFileSystem::unlink(ppip_to, oopt);
     if (ret == PLFS_ENOTEMPTY ) {
         return(ret);
     }
@@ -735,7 +735,7 @@ ContainerFileSystem::rename(struct plfs_physpathinfo *ppip,
      */
     if (ret == PLFS_SUCCESS) {
         ContainerIndex *ci;
-        ci = container_index_alloc(ppip->mnt_pt);
+        ci = container_index_alloc(ppip->mnt_pt, oopt);
         if (ci == NULL) {
             ret = PLFS_ENOMEM;
         } else {
@@ -797,7 +797,7 @@ ContainerFileSystem::utime(struct plfs_physpathinfo *ppip, struct utimbuf *ut)
  */
 plfs_error_t
 ContainerFileSystem::getattr(struct plfs_physpathinfo *ppip, struct stat *stbuf,
-                             int /* sz_only */)
+                             int /* sz_only */, Plfs_open_opt *oopt)
 {
     plfs_error_t ret = PLFS_SUCCESS;
     mode_t mode = 0;
@@ -816,7 +816,7 @@ ContainerFileSystem::getattr(struct plfs_physpathinfo *ppip, struct stat *stbuf,
     
     } else {
     
-        ret = Container::getattr(ppip, stbuf, NULL);
+        ret = Container::getattr(ppip, stbuf, NULL, oopt);
         mode = S_IFREG;
 
     }
@@ -828,7 +828,7 @@ ContainerFileSystem::getattr(struct plfs_physpathinfo *ppip, struct stat *stbuf,
 
 plfs_error_t
 ContainerFileSystem::trunc(struct plfs_physpathinfo *ppip, off_t offset,
-                           int open_file)
+                           int open_file, Plfs_open_opt *oopt)
 {
     plfs_error_t ret = PLFS_SUCCESS;
     mode_t mode = 0;
@@ -848,14 +848,14 @@ ContainerFileSystem::trunc(struct plfs_physpathinfo *ppip, off_t offset,
     
     if (offset == 0) {
         /* no need to getattr in this case */
-        ret = containerfs_zero_helper(ppip, open_file, NULL);
+        ret = containerfs_zero_helper(ppip, open_file, NULL, oopt);
     } else {
         stbuf.st_size = 0;
         /* sz_only isn't accurate in this case, hardwire to false */
-        ret = this->getattr(ppip, &stbuf, false /* sz_only */);
+        ret = this->getattr(ppip, &stbuf, false /* sz_only */, oopt);
         /* clearly caching the size in stbuf isn't atomic ... */
         if (ret == PLFS_SUCCESS) {
-            ret = containerfs_truncate_helper(ppip, offset, stbuf.st_size, 0);
+            ret = containerfs_truncate_helper(ppip, offset, stbuf.st_size, 0, oopt);
         }
     }
 
@@ -872,7 +872,7 @@ ContainerFileSystem::trunc(struct plfs_physpathinfo *ppip, off_t offset,
  * job, it will leave something weird.
  */
 plfs_error_t
-ContainerFileSystem::unlink(struct plfs_physpathinfo *ppip)
+ContainerFileSystem::unlink(struct plfs_physpathinfo *ppip, Plfs_open_opt *oopt)
 {
     plfs_error_t ret = PLFS_SUCCESS;
     UnlinkOp op;  /* treats file and dirs appropriately */
@@ -909,7 +909,7 @@ ContainerFileSystem::unlink(struct plfs_physpathinfo *ppip)
     if (ret == PLFS_SUCCESS) {
         ContainerIndex *ci;
         plfs_error_t rv = PLFS_ENOMEM;
-        ci = container_index_alloc(ppip->mnt_pt);
+        ci = container_index_alloc(ppip->mnt_pt, oopt);
         if (ci) {
             rv = ci->index_droppings_unlink(ppip);
             delete ci;

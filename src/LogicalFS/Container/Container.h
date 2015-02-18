@@ -61,7 +61,7 @@ class Container
                                         bool full_path);
     static plfs_error_t create(struct plfs_physpathinfo *,
                                const string&, mode_t mode, int flags, 
-                               int *extra_attempts,pid_t, bool lazy_subdir );
+                               int *extra_attempts,pid_t, bool lazy_subdir , Plfs_open_opt *oopt);
     static plfs_error_t establish_writehostdir(const ContainerPaths& paths,
                                                mode_t mode,
                                                string& physical_hostdir,
@@ -77,7 +77,7 @@ class Container
                                  const string&, subdir_type );
     static string getMetaDirPath( const string& );
     static plfs_error_t getattr(struct plfs_physpathinfo *, struct stat *,
-                                Container_OpenFile *);
+                                Container_OpenFile *, Plfs_open_opt *oopt);
     static mode_t getmode(const string&, struct plfs_backend *);
     static bool isContainer(const struct plfs_pathback *physical_path,
                             mode_t *);

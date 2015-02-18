@@ -48,6 +48,13 @@ set(PLFS_SOURCE_DIR  "${CMAKE_CURRENT_SOURCE_DIR}/src")
 set(PLFS_TOOLS_DIR  "${CMAKE_CURRENT_SOURCE_DIR}/tools")
 set(PLFS_TESTS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/tests")
 set(PLFS_MAN_DIR  "${CMAKE_CURRENT_SOURCE_DIR}/man")
+# XXX AC mdhim-mod
+set(MDHIM_SOURCE_DIR "/usr/projects/plfs/rrz/mdhim/mdhim-tng/src")
+set(UTHASH_SOURCE_DIR "${MDHIM_SOURCE_DIR}/uthash")
+set(MPI_SOURCE_DIR
+    "/turquoise/usr/projects/plfs/rrz/mpich-3.1.1-per_obj-gnu-plfs-2.5-mdhim/mpich-install/include")
+set(LEVELDB_SOURCE_DIR "/usr/projects/plfs/rrz/mdhim/leveldb-1.14.0/include")
+# XXX AC mdhim-mod
 
 #BUILD_DIR is where we build from
 set(PLFS_BUILD_DIR "${CMAKE_BINARY_DIR}")
@@ -82,6 +89,13 @@ include_directories(${PLFS_SOURCE_DIR}/LogicalFS/SmallFile/smallfile)
 include_directories(${PLFS_SOURCE_DIR}/Mlog)
 #Plfsrc
 include_directories(${PLFS_SOURCE_DIR}/Plfsrc)
+# XXX AC mdhim-mod
+include_directories(${MDHIM_SOURCE_DIR})
+include_directories(${UTHASH_SOURCE_DIR})
+include_directories(${MPI_SOURCE_DIR})
+
+# XXX AC mdhim-mod
+
 #user defined search paths
 foreach(path ${CMAKE_INCLUDE_PATH})
   include_directories(${path})
@@ -193,6 +207,8 @@ endif (BUILD_IOFSL)
 AUX_SOURCE_DIRECTORY(${PLFS_SOURCE_DIR}/LogicalFS logicalfs)
 AUX_SOURCE_DIRECTORY(${PLFS_SOURCE_DIR}/LogicalFS/Container logicalfs_container)
 AUX_SOURCE_DIRECTORY(${PLFS_SOURCE_DIR}/LogicalFS/Container/ByteRangeIndex container_br_index)
+AUX_SOURCE_DIRECTORY(${PLFS_SOURCE_DIR}/LogicalFS/Container/MDHIMIndex
+    container_mdhim_index)
 AUX_SOURCE_DIRECTORY(${PLFS_SOURCE_DIR}/LogicalFS/FlatFile logicalfs_flatfile)
 AUX_SOURCE_DIRECTORY(${PLFS_SOURCE_DIR}/LogicalFS/SmallFile logicalfs_smallfile)
 AUX_SOURCE_DIRECTORY(${PLFS_SOURCE_DIR}/LogicalFS/SmallFile/smallfile smallfile)
@@ -202,7 +218,8 @@ AUX_SOURCE_DIRECTORY(${PLFS_SOURCE_DIR}/Plfsrc plfsrc)
 
 SET(SRCDIR ${plfs_src_dir} ${iostore} ${iostore_glib} ${iostore_hdfs} 
            ${iostore_posix} ${iostore_pvfs} ${iostore_fuse} ${iostore_iofsl}
-           ${logicalfs} ${logicalfs_container} ${container_br_index} ${logicalfs_flatfile}
+           ${logicalfs} ${logicalfs_container} ${container_br_index}
+           ${container_mdhim_index} ${logicalfs_flatfile}
            ${logicalfs_smallfile} ${smallfile} ${mlog} ${plfsrc}
 )
 
@@ -343,6 +360,14 @@ if (FUSE_FOUND AND NOT DISABLE_FUSE)
 elseif (NOT DISABLE_FUSE)
     message(FATAL_ERROR "FUSE not found and DISABLE_FUSE not specified")
 endif(FUSE_FOUND AND NOT DISABLE_FUSE)
+
+## XXX AC mdhim-mod
+target_link_libraries(plfs_lib ${MDHIM_SOURCE_DIR}/libmdhim.so.1)
+target_link_libraries(plfs_lib
+    /usr/projects/plfs/rrz/mdhim/leveldb-1.14.0/libleveldb.so.1)
+target_link_libraries(plfs_lib
+    /usr/projects/plfs/rrz/mpich-3.1.1-per_obj-gnu-plfs-2.5-mdhim/mpich-install/lib/libmpi.so.12)
+# XXX AC mdhim-mod
 
 #helper tools
 foreach (SOURCE dcon.c findmesgbuf.c plfs_check_config.cpp plfs_ls.cpp

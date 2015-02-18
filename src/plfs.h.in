@@ -115,7 +115,7 @@ typedef void *Plfs_dirp;
     /* plfs_create
        you don't need to call this, you can also pass O_CREAT to plfs_open
     */
-    plfs_error_t plfs_create( const char *path, mode_t mode, int flags, pid_t pid );
+    plfs_error_t plfs_create( const char *path, mode_t mode, int flags, pid_t pid, Plfs_open_opt *open_opt );
 
     // Bool sneaked in here
 
@@ -126,7 +126,7 @@ typedef void *Plfs_dirp;
         filesize.  This is sort of like stat-lite or lazy stat
      */
     plfs_error_t plfs_getattr(Plfs_fd *, const char *path, struct stat *st,
-                              int size_only);
+                              int size_only, Plfs_open_opt *oopt);
 
     /* Get the extended attribute */
     plfs_error_t plfs_getxattr(Plfs_fd *fd, void *value, const char *key, size_t len);
@@ -182,7 +182,7 @@ typedef void *Plfs_dirp;
 
     plfs_error_t plfs_readlink( const char *path, char *buf, size_t bufsize, int *bytes );
 
-    plfs_error_t plfs_rename( const char *from, const char *to );
+    plfs_error_t plfs_rename( const char *from, const char *to, Plfs_open_opt *oopt );
 
     plfs_error_t plfs_rmdir( const char *path );
 
@@ -197,9 +197,9 @@ typedef void *Plfs_dirp;
     plfs_error_t plfs_invalidate_read_cache( const char *dir );
 
     /* Plfs_fd can be NULL, but then path must be valid */
-    plfs_error_t plfs_trunc( Plfs_fd *, const char *path, off_t, int open_file );
+    plfs_error_t plfs_trunc( Plfs_fd *, const char *path, off_t, int open_file, Plfs_open_opt *oopt );
 
-    plfs_error_t plfs_unlink( const char *path );
+    plfs_error_t plfs_unlink( const char *path, Plfs_open_opt * oopt );
 
     plfs_error_t plfs_utime( const char *path, struct utimbuf *ut );
 

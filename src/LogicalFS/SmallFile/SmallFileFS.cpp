@@ -134,7 +134,7 @@ SmallFileFS::open(Plfs_fd **pfd, struct plfs_physpathinfo *ppip,
 
 plfs_error_t
 SmallFileFS::create(struct plfs_physpathinfo *ppip, mode_t /* mode */,
-                    int flags, pid_t pid)
+                    int flags, pid_t pid, Plfs_open_opt * /* oopt */)
 {
     PathExpandInfo expinfo;
     plfs_error_t ret = PLFS_TBD;
@@ -234,7 +234,7 @@ SmallFileFS::getmode(struct plfs_physpathinfo *ppip, mode_t *mode)
 {
     struct stat stbuf;
     plfs_error_t ret;
-    ret = SmallFileFS::getattr(ppip, &stbuf, -1);
+    ret = SmallFileFS::getattr(ppip, &stbuf, -1, NULL);
     if (ret == PLFS_SUCCESS) *mode = stbuf.st_mode;
     return ret;
 }
@@ -267,7 +267,7 @@ SmallFileFS::access(struct plfs_physpathinfo *ppip, int mask)
 
 plfs_error_t
 SmallFileFS::rename(struct plfs_physpathinfo *ppip,
-                    struct plfs_physpathinfo *ppip_to)
+                    struct plfs_physpathinfo *ppip_to, Plfs_open_opt * /* oopt */)
 {
     PathExpandInfo expinfo;
     PathExpandInfo expinfo2;
@@ -349,7 +349,7 @@ SmallFileFS::utime(struct plfs_physpathinfo *ppip, struct utimbuf *ut)
 
 plfs_error_t
 SmallFileFS::getattr(struct plfs_physpathinfo *ppip, struct stat *stbuf,
-                     int sz_only)
+                     int sz_only,Plfs_open_opt * /* oopt */)
 {
     PathExpandInfo expinfo;
     plfs_error_t ret;
@@ -389,7 +389,7 @@ SmallFileFS::getattr(struct plfs_physpathinfo *ppip, struct stat *stbuf,
 
 plfs_error_t
 SmallFileFS::trunc(struct plfs_physpathinfo *ppip, off_t offset, 
-                   int /* open_file */)
+                   int /* open_file */,Plfs_open_opt * /* oopt */)
 {
     PathExpandInfo expinfo;
     ContainerPtr container;
@@ -408,7 +408,7 @@ SmallFileFS::trunc(struct plfs_physpathinfo *ppip, off_t offset,
 }
 
 plfs_error_t
-SmallFileFS::unlink(struct plfs_physpathinfo *ppip)
+SmallFileFS::unlink(struct plfs_physpathinfo *ppip, Plfs_open_opt * /* oopt */)
 {
     PathExpandInfo expinfo;
     ContainerPtr container;

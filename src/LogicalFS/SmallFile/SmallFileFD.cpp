@@ -10,7 +10,7 @@ Small_fd::open(struct plfs_physpathinfo * /* ppip */, int flags, pid_t pid,
     refs++;
     open_flags = flags & 0xf;
     open_by_pid = pid;
-    if (flags & O_TRUNC) trunc(0);
+    if (flags & O_TRUNC) trunc(0, NULL);
     return PLFS_SUCCESS;
 }
 
@@ -81,7 +81,7 @@ Small_fd::sync(pid_t /* pid */)
 }
 
 plfs_error_t
-Small_fd::trunc(off_t offset)
+Small_fd::trunc(off_t offset, Plfs_open_opt *)
 {
     plfs_error_t ret;
     if (open_flags == O_WRONLY || open_flags == O_RDWR) {
@@ -100,7 +100,7 @@ Small_fd::trunc(off_t offset)
 }
 
 plfs_error_t
-Small_fd::getattr(struct stat *stbuf, int sz_only)
+Small_fd::getattr(struct stat *stbuf, int sz_only, Plfs_open_opt *)
 {
     IndexPtr temp_indexes;
     plfs_error_t ret;

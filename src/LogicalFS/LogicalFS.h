@@ -23,9 +23,9 @@ class
         // here are a bunch of methods for operating on one
         // these should be static but there aren't static virtual methods
         virtual plfs_error_t getattr(struct plfs_physpathinfo *ppip, 
-                            struct stat *stbuf, int sz_only) = 0;
+                            struct stat *stbuf, int sz_only, Plfs_open_opt *oopt) = 0;
         virtual plfs_error_t trunc(struct plfs_physpathinfo *ppip, off_t offset,
-                          int open_file) = 0;
+                          int open_file, Plfs_open_opt *oopt) = 0;
         virtual plfs_error_t chown(struct plfs_physpathinfo *ppip,
                           uid_t u, gid_t g ) = 0;
         virtual plfs_error_t chmod(struct plfs_physpathinfo *ppip, 
@@ -35,14 +35,14 @@ class
         virtual plfs_error_t access(struct plfs_physpathinfo *ppip, 
                                     int mask ) = 0;
         virtual plfs_error_t rename(struct plfs_physpathinfo *ppip,
-                           struct plfs_physpathinfo *ppip_to) = 0;
+                           struct plfs_physpathinfo *ppip_to, Plfs_open_opt *oopt) = 0;
         virtual plfs_error_t link(struct plfs_physpathinfo *ppip,
                          struct plfs_physpathinfo *ppip_to) = 0;
         virtual plfs_error_t utime(struct plfs_physpathinfo *ppip,
                           struct utimbuf *ut ) = 0;
-        virtual plfs_error_t unlink(struct plfs_physpathinfo *ppip) = 0;
+        virtual plfs_error_t unlink(struct plfs_physpathinfo *ppip, Plfs_open_opt *oopt) = 0;
         virtual plfs_error_t create(struct plfs_physpathinfo *ppip, mode_t,
-                           int flags, pid_t pid) = 0;
+                           int flags, pid_t pid, Plfs_open_opt *oopt) = 0;
         virtual plfs_error_t mkdir(struct plfs_physpathinfo *ppip, mode_t) = 0;
         virtual plfs_error_t readdir(struct plfs_physpathinfo *ppip,
                             set<string> *entries) = 0;

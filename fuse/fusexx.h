@@ -21,6 +21,8 @@
 #include <string.h>
 #include <stdio.h>
 
+
+typedef struct Plfs_open_opt Plfs_open_opt;
 namespace fusexx
 {
     /*
@@ -69,7 +71,7 @@ namespace fusexx
             static int f_readlink (const char *, char *, size_t) {
                 FUSE_RET
             }
-            static int f_getattr (const char *, struct stat * ) {
+            static int f_getattr (const char *, struct stat *, Plfs_open_opt * ) {
                 FUSE_RET
             }
             static int f_getdir (const char *, fuse_dirh_t, fuse_dirfil_t) {
@@ -81,7 +83,7 @@ namespace fusexx
             static int f_mkdir (const char *, mode_t) {
                 FUSE_RET
             }
-            static int f_unlink (const char *) {
+            static int f_unlink (const char *, Plfs_open_opt *) {
                 FUSE_RET
             }
             static int f_rmdir (const char *) {
@@ -90,7 +92,7 @@ namespace fusexx
             static int f_symlink (const char *, const char *) {
                 FUSE_RET
             }
-            static int f_rename (const char *, const char *) {
+            static int f_rename (const char *, const char *, Plfs_open_opt *) {
                 FUSE_RET
             }
             static int f_link (const char *, const char *) {
@@ -102,7 +104,7 @@ namespace fusexx
             static int f_chown (const char *, uid_t, gid_t) {
                 FUSE_RET
             }
-            static int f_truncate (const char *, off_t) {
+            static int f_truncate (const char *, off_t, Plfs_open_opt *) {
                 FUSE_RET
             }
             static int f_utime (const char *, struct utimbuf *) {
@@ -171,11 +173,11 @@ namespace fusexx
                 FUSE_RET
             }
             static int f_ftruncate (const char *, off_t,
-                                    struct fuse_file_info *) {
+                                    struct fuse_file_info *, Plfs_open_opt *) {
                 FUSE_RET
             }
             static int f_fgetattr (const char *, struct stat *,
-                                   struct fuse_file_info *) {
+                                   struct fuse_file_info *, Plfs_open_opt *) {
                 FUSE_RET
             }
 

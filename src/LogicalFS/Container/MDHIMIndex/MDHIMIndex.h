@@ -18,7 +18,7 @@ typedef struct plfs_index_record Plfs_index_record;
 /**
  * MDHIMIndex: MDHIM instance of PLFS container index
  */
-class MDHIMIndex : ContainerIndex {
+class MDHIMIndex : public ContainerIndex {
 public:
     MDHIMIndex(PlfsMount *pmnt, Plfs_open_opt *oopt);  /* constructor */
     ~MDHIMIndex();                /* destructor */

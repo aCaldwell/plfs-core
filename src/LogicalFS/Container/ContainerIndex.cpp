@@ -2,6 +2,7 @@
 #include "ContainerIndex.h"
 
 #include "ByteRangeIndex.h"
+#include "MDHIMIndex.h"
 
 /**
  * container_index_id

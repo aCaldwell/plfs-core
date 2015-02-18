@@ -25,8 +25,8 @@
 #include "MDHIMIndex.h"
 
 
-ostream &
-operator << ( ostream &os, const MDHIMIndex &obj )
+ostream&
+operator << ( ostream &os, const MDHIMIndex /*&obj */)
 {
     os << "# Index dump" << endl;
     os << "# MDHIMmode=" << endl;
@@ -44,7 +44,7 @@ operator << ( ostream &os, const MDHIMIndex &obj )
 MDHIMIndex::MDHIMIndex (PlfsMount *pmnt, Plfs_open_opt *oopt)
 {
     this->db_opts = mdhim_options_init();  /* Initialize the options */
-    MdhimOpts tmp_opts = pmnt->mdhim_opts; /* Just so we don't have to keep refering to pmnt */
+    MdhimOpts *tmp_opts = pmnt->mdhim_opts; /* Just so we don't have to keep refering to pmnt */
 
     /*
     * XXXAC:
@@ -56,7 +56,7 @@ MDHIMIndex::MDHIMIndex (PlfsMount *pmnt, Plfs_open_opt *oopt)
     mdhim_options_set_key_type(this->db_opts, tmp_opts->db_key_type);
     mdhim_options_set_db_type(this->db_opts, tmp_opts->db_type);
     mdhim_options_set_value_append(this->db_opts, tmp_opts->db_value_append);
-    mdhim_options_set_num_worker_threads(this->db_opts, tmp_opts->db_num_wthreads);
+    mdhim_options_set_num_worker_threads(this->db_opts, tmp_opts->num_wthreads);
     mdhim_options_set_server_factor(this->db_opts, tmp_opts->db_create_new);
     mdhim_options_set_debug_level(this->db_opts, tmp_opts->debug_level);
     mdhim_options_set_max_recs_per_slice(this->db_opts, tmp_opts->max_recs_per_slice);
@@ -115,8 +115,10 @@ MDHIMIndex::~MDHIMIndex()
 plfs_error_t
 MDHIMIndex::index_open ( Container_OpenFile *cof, int rw_flags,
                          Plfs_open_opt *oopt)
-    {j
-    int stat_ret;
+{
+    if(cof || oopt) {
+        printf("This is a place holder");
+    }
     plfs_error_t ret = PLFS_SUCCESS;
 
     if(!this->mdhix) {
@@ -125,8 +127,8 @@ MDHIMIndex::index_open ( Container_OpenFile *cof, int rw_flags,
 
     if (ret == PLFS_SUCCESS) {
         if(this->dirty_stat && (rw_flags == O_RDWR || rw_flags == O_RDONLY)) {
-            stat_ret = mdhimStatFlush(this->mdhix, this->mdhix->primary_index);
-            if(stat_ret != MDHIM_SUCCESS) {
+            this->stat_ret = mdhimStatFlush(this->mdhix, this->mdhix->primary_index);
+            if(this->stat_ret != MDHIM_SUCCESS) {
                 ret = PLFS_EINVAL;
             }else {
                 this->dirty_stat = 0;
@@ -146,9 +148,9 @@ MDHIMIndex::index_open ( Container_OpenFile *cof, int rw_flags,
  *--------------------------------------------------------------------------------------
  */
 plfs_error_t
-MDHIMIndex::index_close()
+MDHIMIndex::index_close( Container_OpenFile *, off_t*, size_t*, Plfs_close_opt*)
 {
-    return ;
+    return PLFS_SUCCESS;
 }		/* -----  end of method MDHIMIndex::index_close  ----- */
 
 
@@ -161,7 +163,181 @@ MDHIMIndex::index_close()
  *--------------------------------------------------------------------------------------
  */
 plfs_error_t
-MDHIMIndex::index_add (  )
+MDHIMIndex::index_add ( Container_OpenFile*, size_t, off_t, pid_t, off_t, double, double )
 {
-    return ;
+    return PLFS_SUCCESS;
 }		/* -----  end of method MDHIMIndex::index_add  ----- */
+
+
+/*
+ *--------------------------------------------------------------------------------------
+ *       Class:  MDHIMIndex
+ *      Method:  MDHIMIndex :: index_add
+ * Description:  Insert into MDHIM an index entry of the data_dropping files location 
+ *               and name, logical_offset, physical_offset
+ *--------------------------------------------------------------------------------------
+ */
+plfs_error_t
+MDHIMIndex::index_sync ( Container_OpenFile * )
+{
+    return PLFS_SUCCESS;
+}		/* -----  end of method MDHIMIndex::index_sync  ----- */
+
+/*
+ *--------------------------------------------------------------------------------------
+ *       Class:  MDHIMIndex
+ *      Method:  MDHIMIndex :: index_add
+ * Description:  Insert into MDHIM an index entry of the data_dropping files location 
+ *               and name, logical_offset, physical_offset
+ *--------------------------------------------------------------------------------------
+ */
+plfs_error_t
+MDHIMIndex::index_query ( Container_OpenFile *, off_t , size_t, list<index_record> & )
+{
+    return PLFS_SUCCESS;
+}		/* -----  end of method MDHIMIndex::index_query  ----- */
+
+/*
+ *--------------------------------------------------------------------------------------
+ *       Class:  MDHIMIndex
+ *      Method:  MDHIMIndex :: index_add
+ * Description:  Insert into MDHIM an index entry of the data_dropping files location 
+ *               and name, logical_offset, physical_offset
+ *--------------------------------------------------------------------------------------
+ */
+plfs_error_t
+MDHIMIndex::index_truncate ( Container_OpenFile *, off_t )
+{
+    return PLFS_SUCCESS;
+}		/* -----  end of method MDHIMIndex::index_query  ----- */
+
+/*
+ *--------------------------------------------------------------------------------------
+ *       Class:  MDHIMIndex
+ *      Method:  MDHIMIndex :: index_add
+ * Description:  Insert into MDHIM an index entry of the data_dropping files location 
+ *               and name, logical_offset, physical_offset
+ *--------------------------------------------------------------------------------------
+ */
+plfs_error_t
+MDHIMIndex::index_closing_wdrop ( Container_OpenFile *, string, pid_t, const char * )
+{
+    return PLFS_SUCCESS;
+}		/* -----  end of method MDHIMIndex::index_query  ----- */
+
+/*
+ *--------------------------------------------------------------------------------------
+ *       Class:  MDHIMIndex
+ *      Method:  MDHIMIndex :: index_add
+ * Description:  Insert into MDHIM an index entry of the data_dropping files location 
+ *               and name, logical_offset, physical_offset
+ *--------------------------------------------------------------------------------------
+ */
+plfs_error_t
+MDHIMIndex::index_new_wdrop ( Container_OpenFile *, string, pid_t, const char * )
+{
+    return PLFS_SUCCESS;
+}		/* -----  end of method MDHIMIndex::index_query  ----- */
+
+/*
+ *--------------------------------------------------------------------------------------
+ *       Class:  MDHIMIndex
+ *      Method:  MDHIMIndex :: index_add
+ * Description:  Insert into MDHIM an index entry of the data_dropping files location 
+ *               and name, logical_offset, physical_offset
+ *--------------------------------------------------------------------------------------
+ */
+plfs_error_t
+MDHIMIndex::index_optimize ( Container_OpenFile * )
+{
+    return PLFS_SUCCESS;
+}		/* -----  end of method MDHIMIndex::index_query  ----- */
+
+/*
+ *--------------------------------------------------------------------------------------
+ *       Class:  MDHIMIndex
+ *      Method:  MDHIMIndex :: index_add
+ * Description:  Insert into MDHIM an index entry of the data_dropping files location 
+ *               and name, logical_offset, physical_offset
+ *--------------------------------------------------------------------------------------
+ */
+plfs_error_t
+MDHIMIndex::index_info ( off_t &, off_t & )
+{
+    return PLFS_SUCCESS;
+}		/* -----  end of method MDHIMIndex::index_query  ----- */
+
+/*
+ *--------------------------------------------------------------------------------------
+ *       Class:  MDHIMIndex
+ *      Method:  MDHIMIndex :: index_add
+ * Description:  Insert into MDHIM an index entry of the data_dropping files location 
+ *               and name, logical_offset, physical_offset
+ *--------------------------------------------------------------------------------------
+ */
+plfs_error_t
+MDHIMIndex::index_droppings_getattrsize ( struct plfs_physpathinfo *,
+                                          struct stat *,
+                                          set<string> *,
+                                          set<string> * )
+{
+    return PLFS_SUCCESS;
+}		/* -----  end of method MDHIMIndex::index_query  ----- */
+
+/*
+ *--------------------------------------------------------------------------------------
+ *       Class:  MDHIMIndex
+ *      Method:  MDHIMIndex :: index_add
+ * Description:  Insert into MDHIM an index entry of the data_dropping files location 
+ *               and name, logical_offset, physical_offset
+ *--------------------------------------------------------------------------------------
+ */
+plfs_error_t
+MDHIMIndex::index_droppings_rename ( struct plfs_physpathinfo *,
+                                     struct plfs_physpathinfo *)
+{
+    return PLFS_SUCCESS;
+}		/* -----  end of method MDHIMIndex::index_query  ----- */
+
+/*
+ *--------------------------------------------------------------------------------------
+ *       Class:  MDHIMIndex
+ *      Method:  MDHIMIndex :: index_add
+ * Description:  Insert into MDHIM an index entry of the data_dropping files location 
+ *               and name, logical_offset, physical_offset
+ *--------------------------------------------------------------------------------------
+ */
+plfs_error_t
+MDHIMIndex::index_droppings_trunc ( struct plfs_physpathinfo *,
+                                     off_t )
+{
+    return PLFS_SUCCESS;
+}		/* -----  end of method MDHIMIndex::index_query  ----- */
+
+/*
+ *--------------------------------------------------------------------------------------
+ *       Class:  MDHIMIndex
+ *      Method:  MDHIMIndex :: index_add
+ * Description:  Insert into MDHIM an index entry of the data_dropping files location 
+ *               and name, logical_offset, physical_offset
+ *--------------------------------------------------------------------------------------
+ */
+plfs_error_t
+MDHIMIndex::index_droppings_unlink ( struct plfs_physpathinfo *)
+{
+    return PLFS_SUCCESS;
+}		/* -----  end of method MDHIMIndex::index_query  ----- */
+
+/*
+ *--------------------------------------------------------------------------------------
+ *       Class:  MDHIMIndex
+ *      Method:  MDHIMIndex :: index_add
+ * Description:  Insert into MDHIM an index entry of the data_dropping files location 
+ *               and name, logical_offset, physical_offset
+ *--------------------------------------------------------------------------------------
+ */
+plfs_error_t
+MDHIMIndex::index_droppings_zero ( struct plfs_physpathinfo *)
+{
+    return PLFS_SUCCESS;
+}		/* -----  end of method MDHIMIndex::index_query  ----- */

@@ -136,7 +136,7 @@ Flat_fd::sync(pid_t /* pid */)
 
 /* ret PLFS_SUCCESS or PLFS_E */
 plfs_error_t
-Flat_fd::trunc(off_t offset)
+Flat_fd::trunc(off_t offset, Plfs_open_opt *)
 {
     plfs_error_t ret = this->backend_fh->Ftruncate(offset);
     return(ret);
@@ -144,7 +144,7 @@ Flat_fd::trunc(off_t offset)
 
 /* ret PLFS_SUCCESS or PLFS_E */
 plfs_error_t
-Flat_fd::getattr(struct stat *stbuf, int /* sz_only */)
+Flat_fd::getattr(struct stat *stbuf, int /* sz_only */, Plfs_open_opt *)
 {
     plfs_error_t ret = this->backend_fh->Fstat(stbuf);
     return(ret);
@@ -203,7 +203,7 @@ FlatFileSystem::open(Plfs_fd **pfd,struct plfs_physpathinfo *ppip,
 // file after POSIX creat() is called.
 plfs_error_t
 FlatFileSystem::create(struct plfs_physpathinfo *ppip, mode_t mode,
-                       int /* flags */, pid_t /* pid */)
+                       int /* flags */, pid_t /* pid */, Plfs_open_opt * /* oopt */)
 {
     plfs_error_t ret = PLFS_SUCCESS;
     //     An open(... O_CREAT) gets turned into a mknod followed by an
@@ -262,7 +262,7 @@ FlatFileSystem::access(struct plfs_physpathinfo *ppip, int mask )
 /* ret PLFS_SUCCESS or PLFS_E */
 plfs_error_t
 FlatFileSystem::rename(struct plfs_physpathinfo *ppip,
-                       struct plfs_physpathinfo *ppip_to)
+                       struct plfs_physpathinfo *ppip_to, Plfs_open_opt *oopt)
 {
     plfs_error_t ret = PLFS_SUCCESS;
     struct stat stbuf;
@@ -301,7 +301,7 @@ FlatFileSystem::rename(struct plfs_physpathinfo *ppip,
     // will be restored and -NOTEMPTY returned.
     //
     } else if (S_ISDIR(stbuf.st_mode)) {
-        ret = FlatFileSystem::unlink(ppip_to);
+        ret = FlatFileSystem::unlink(ppip_to, oopt);
         if (ret != PLFS_ENOTEMPTY) {
             RenameOp op(ppip_to);
             ret=plfs_flatfile_operation(ppip,op,ppip->canback->store);
@@ -336,7 +336,7 @@ FlatFileSystem::utime(struct plfs_physpathinfo *ppip, struct utimbuf *ut )
 /* ret PLFS_SUCCESS or PLFS_E */
 plfs_error_t
 FlatFileSystem::getattr(struct plfs_physpathinfo *ppip,
-                        struct stat *stbuf, int /* sz_only */)
+                        struct stat *stbuf, int /* sz_only */, Plfs_open_opt *)
 {
     plfs_error_t ret = PLFS_SUCCESS;
     ret = ppip->canback->store->Lstat(ppip->canbpath.c_str(),stbuf);
@@ -346,7 +346,7 @@ FlatFileSystem::getattr(struct plfs_physpathinfo *ppip,
 /* ret PLFS_SUCCESS or PLFS_E */
 plfs_error_t
 FlatFileSystem::trunc(struct plfs_physpathinfo *ppip, off_t offset,
-                      int /* open_file */)
+                      int /* open_file */, Plfs_open_opt *)
 {
     plfs_error_t ret = PLFS_SUCCESS;
     ret = ppip->canback->store->Truncate(ppip->canbpath.c_str(),offset);
@@ -354,7 +354,7 @@ FlatFileSystem::trunc(struct plfs_physpathinfo *ppip, off_t offset,
 }
 
 plfs_error_t
-FlatFileSystem::unlink(struct plfs_physpathinfo *ppip)
+FlatFileSystem::unlink(struct plfs_physpathinfo *ppip, Plfs_open_opt *)
 {
     plfs_error_t ret = PLFS_SUCCESS;
     UnlinkOp op;

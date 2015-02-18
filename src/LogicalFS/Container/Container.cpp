@@ -353,7 +353,7 @@ makeTopLevel(const string& expanded_path, struct plfs_backend *canback,
 static plfs_error_t
 createHelper(struct plfs_physpathinfo *ppip, const string& hostname,
              mode_t mode, int flags, int * /* extra_attempts */,
-             pid_t pid, bool lazy_subdir)
+             pid_t pid, bool lazy_subdir, Plfs_open_opt *oopt)
 {
     // this below comment is specific to FUSE
     // TODO we're in a mutex here so only one thread will
@@ -389,7 +389,7 @@ createHelper(struct plfs_physpathinfo *ppip, const string& hostname,
     }
     //creat specifies that we truncate if the file exists
     if (existing_container && flags & O_TRUNC){
-        ret = containerfs_zero_helper(ppip, 0, NULL);
+        ret = containerfs_zero_helper(ppip, 0, NULL, oopt);
         if (ret != PLFS_SUCCESS) {
             mlog(CON_CRIT, "Failed to truncate file %s : %s",
                  ppip->canbpath.c_str(), strplfserr(ret));
@@ -584,12 +584,12 @@ Container::bytesToBlocks( size_t total_bytes )
 plfs_error_t
 Container::create(struct plfs_physpathinfo *ppip,
                    const string& hostname, mode_t mode, int flags,
-                   int *extra_attempts, pid_t pid, bool lazy_subdir)
+                   int *extra_attempts, pid_t pid, bool lazy_subdir, Plfs_open_opt *oopt)
 {
     plfs_error_t ret = PLFS_SUCCESS;
     do {
         ret = createHelper(ppip, hostname, mode, flags, extra_attempts,
-                           pid, lazy_subdir);
+                           pid, lazy_subdir, oopt);
         if ( ret != PLFS_SUCCESS ) {
             if ( ret != PLFS_EEXIST && ret != PLFS_ENOENT && ret != PLFS_EISDIR
                     && ret != PLFS_ENOTEMPTY ) {
@@ -955,7 +955,7 @@ discover_openhosts(set<string> &entries, set<string> &openhosts)
  */
 plfs_error_t
 Container::getattr(struct plfs_physpathinfo *ppip, struct stat *stbuf,
-                   Container_OpenFile *opencof)
+                   Container_OpenFile *opencof, Plfs_open_opt *oopt)
 {
     plfs_error_t ret = PLFS_SUCCESS;
     plfs_error_t rv;
@@ -1062,7 +1062,7 @@ Container::getattr(struct plfs_physpathinfo *ppip, struct stat *stbuf,
         if (opencof) {
             ci = opencof->cof_index;
         } else { 
-            ci = container_index_alloc(ppip->mnt_pt);
+            ci = container_index_alloc(ppip->mnt_pt, oopt);
         }
         
         if (ci == NULL) {

@@ -421,7 +421,7 @@ static struct pfuse_debug_driver *get_dbgdrv(const char *path) {
 // this is not just a simple wrapper since we cache some state here
 // about what files we've made.  This might get some performance but
 // maybe at the cost of correctness.  hmmmm.
-int Plfs::makePlfsFile( string expanded_path, mode_t mode, int flags )
+int Plfs::makePlfsFile( string expanded_path, mode_t mode, int flags, Plfs_open_opt *open_opt )
 {
     plfs_error_t ret = PLFS_SUCCESS;
     mlog(FUSE_DAPI, "Need to create container for %s (%s %d)",
@@ -439,7 +439,7 @@ int Plfs::makePlfsFile( string expanded_path, mode_t mode, int flags )
     if (self->createdContainers.find(expanded_path)
             ==self->createdContainers.end()) {
         ret = plfs_create( expanded_path.c_str(), mode, flags,
-                           fuse_get_context()->pid );
+                           fuse_get_context()->pid, open_opt );
         self->extra_attempts += extra_attempts;
         if ( ret == PLFS_SUCCESS ) {
             self->createdContainers.insert( expanded_path );
@@ -527,7 +527,7 @@ int Plfs::f_fsync(const char *path, int /* datasync */, struct fuse_file_info *f
 // this means it is an open file.  That means we also need to check our
 // current write file and adjust those indices also if necessary
 int Plfs::f_ftruncate(const char *path, off_t offset,
-                      struct fuse_file_info *fi)
+                      struct fuse_file_info *fi, Plfs_open_opt *open_opt)
 {
     EXIT_IF_DEBUG;
     FUSE_PLFS_ENTER;
@@ -535,18 +535,18 @@ int Plfs::f_ftruncate(const char *path, off_t offset,
     if(of) {
         plfs_sync(of);    // flush any index buffers
     }
-    plfs_error_t err = plfs_trunc( of, strPath.c_str(), offset, true );
+    plfs_error_t err = plfs_trunc( of, strPath.c_str(), offset, true, open_opt );
     ret = -(plfs_error_to_errno(err));
     FUSE_PLFS_EXIT;
 }
 
 // use removeDirectoryTree to remove all data but not the dir structure
 // return 0 or -err
-int Plfs::f_truncate( const char *path, off_t offset )
+int Plfs::f_truncate( const char *path, off_t offset, Plfs_open_opt *open_opt )
 {
     EXIT_IF_DEBUG;
     FUSE_PLFS_ENTER;
-    plfs_error_t err = plfs_trunc( NULL, strPath.c_str(), offset, false );
+    plfs_error_t err = plfs_trunc( NULL, strPath.c_str(), offset, false, open_opt );
     ret = -(plfs_error_to_errno(err));
     FUSE_PLFS_EXIT;
 }
@@ -575,7 +575,7 @@ int Plfs::syncIfOpen( const string &expanded ) {
 
 // a helper for f_getattr and f_fgetattr.
 int Plfs::getattr_helper( string expanded, const char *path,
-                          struct stat *stbuf, Plfs_fd *of )
+                          struct stat *stbuf, Plfs_fd *of, Plfs_open_opt *open_opt )
 {
     struct pfuse_debug_driver *dd;
     bool sz_only = false;
@@ -583,7 +583,7 @@ int Plfs::getattr_helper( string expanded, const char *path,
     // ok, if the file is currently open for write, let's sync it first
     syncIfOpen(expanded);
 
-    plfs_error_t ret = plfs_getattr( of, expanded.c_str(), stbuf, sz_only );
+    plfs_error_t ret = plfs_getattr( of, expanded.c_str(), stbuf, sz_only, open_opt );
     if ( ret == PLFS_ENOENT ) {
         if ( (dd = get_dbgdrv(path)) != NULL ) {
             stbuf->st_mode = S_IFREG | 0444;
@@ -625,18 +625,18 @@ int Plfs::getattr_helper( string expanded, const char *path,
 }
 
 int Plfs::f_fgetattr(const char *path, struct stat *stbuf,
-                     struct fuse_file_info *fi)
+                     struct fuse_file_info *fi, Plfs_open_opt *open_opt)
 {
     FUSE_PLFS_ENTER;
     GET_OPEN_FILE;
-    ret = getattr_helper( strPath, path, stbuf, of );
+    ret = getattr_helper( strPath, path, stbuf, of, open_opt );
     FUSE_PLFS_EXIT;
 }
 
-int Plfs::f_getattr(const char *path, struct stat *stbuf)
+int Plfs::f_getattr(const char *path, struct stat *stbuf, Plfs_open_opt *open_opt)
 {
     FUSE_PLFS_ENTER;
-    ret = getattr_helper( strPath, path, stbuf, NULL );
+    ret = getattr_helper( strPath, path, stbuf, NULL, open_opt );
     FUSE_PLFS_EXIT;
 }
 
@@ -823,10 +823,10 @@ int Plfs::f_rmdir( const char *path )
 //
 // anyway, not sure we need to worry about handling this weird stuff
 // fine to leave it undefined.  users shouldn't do stupid stuff like this anyway
-int Plfs::f_unlink( const char *path )
+int Plfs::f_unlink( const char *path, Plfs_open_opt *open_opt )
 {
     FUSE_PLFS_ENTER;
-    plfs_error_t err = plfs_unlink( strPath.c_str() );
+    plfs_error_t err = plfs_unlink( strPath.c_str(), open_opt );
     if ( err == PLFS_SUCCESS ) {
         plfs_mutex_lock( &self->container_mutex, __FUNCTION__ );
         self->createdContainers.erase( strPath );
@@ -1303,7 +1303,7 @@ int Plfs::f_flush( const char *path, struct fuse_file_info *fi )
 // unlock the mutex
 // update other cached stuff such as created files and known modes
 // not actually sure we should maintain those caches though....
-int Plfs::f_rename( const char *path, const char *to )
+int Plfs::f_rename( const char *path, const char *to, Plfs_open_opt *open_opt )
 {
     FUSE_PLFS_ENTER;
     string toPath = expandPath(to);
@@ -1351,7 +1351,7 @@ int Plfs::f_rename( const char *path, const char *to )
         }
 
         /* now do the rename on the backend */
-        err = plfs_rename(strPath.c_str(),toPath.c_str());
+        err = plfs_rename(strPath.c_str(),toPath.c_str(), open_opt);
 
         // Updated this code to search for all open files because the open
         // files are now cached based on a uid and flags

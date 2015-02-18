@@ -23,8 +23,8 @@ class Plfs_fd
                               pid_t pid, ssize_t *bytes_written) = 0;
         virtual plfs_error_t sync() = 0;
         virtual plfs_error_t sync(pid_t pid) = 0;
-        virtual plfs_error_t trunc(off_t offset) = 0;
-        virtual plfs_error_t getattr(struct stat *stbuf, int sz_only) = 0;
+        virtual plfs_error_t trunc(off_t offset, Plfs_open_opt *) = 0;
+        virtual plfs_error_t getattr(struct stat *stbuf, int sz_only, Plfs_open_opt *) = 0;
         virtual plfs_error_t query(size_t *writers, size_t *readers,
                           size_t *bytes_written, bool *reopen) = 0;
         virtual bool is_good() = 0;
