@@ -11,6 +11,7 @@
                         __FUNCTION__ ); return 0;
 #define FUSE_SILENT_RET return 0;
 
+
 // C Headers
 #include <fuse.h>
 #include <errno.h>
@@ -20,7 +21,6 @@
 #include <unistd.h>
 #include <string.h>
 #include <stdio.h>
-
 
 typedef struct Plfs_open_opt Plfs_open_opt;
 namespace fusexx

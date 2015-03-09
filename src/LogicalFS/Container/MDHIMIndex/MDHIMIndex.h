@@ -4,7 +4,6 @@
 
 #include "mdhim.h"
 
-
 struct plfs_index_record {
     unsigned int chunk_id;
     off_t logical_offset;
@@ -58,12 +57,22 @@ public:
     friend ostream& operator <<(ostream&, const MDHIMIndex&);
 
 private:
-    struct mdhim_t *mdhix;     /* handle to any open mdhim index */
-    mdhim_options_t *db_opts;  /* handle to the database options for MDHIM */
-    int dirty_stat;            /* Flag to keep stats clean */
-    int stat_ret;              /* Has a stat been successfully performed */
-    Plfs_index_record *record; /* Structure to pass into MDHIM that will hold record
-                                  information */
+
+    struct mdhim_bgetrm_t *mdhim_get(unsigned long long int key, int operation);
+    
+    struct mdhim_t *mdhix;              /* handle to any open mdhim index */
+    mdhim_options_t *db_opts;           /* handle to the database options for MDHIM */
+    int dirty_stat;                     /* Flag to keep stats clean */
+    int stat_ret;                       /* Has a stat been successfully performed */
+    Plfs_index_record *record;          /* Structure to pass into MDHIM that will 
+                                         * hold record information 
+                                         */
+    bool isopen;                        /* track if mdhim is ready */
+
+    struct mdhim_brm_t *return_msg;     /* The return message for puts */
+    struct mdhim_bgetrm_t *greturn_msg; /* The return message for gets */
+    //vector<ChunkFile> chunk_map;        /* filenmaes for indx */
+
 
     /*
      * additional state needed:
