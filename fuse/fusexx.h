@@ -22,7 +22,7 @@
 #include <string.h>
 #include <stdio.h>
 
-typedef struct Plfs_open_opt Plfs_open_opt;
+//typedef struct Plfs_open_opt Plfs_open_opt;
 namespace fusexx
 {
     /*

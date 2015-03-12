@@ -1,7 +1,7 @@
-#include "fusexx.h"
 #include "plfs.h"
 #include "plfs_private.h"
 #include "COPYRIGHT.h"
+#include "fusexx.h"
 
 class T;
 

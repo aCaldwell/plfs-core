@@ -59,6 +59,9 @@ struct MdhimOpts {
     char *manifest_path;              // path to the mdhim_manifest file
     char **db_paths;                  // Paths to the DB
 
+    /* The MPI comm to use */
+    void *mpi_comm;
+
     string *err_msg;                  // to report errors in mdhim options parsing
     
 };               /* ----------  end of struct MdhimOpts  ---------- */
@@ -140,6 +143,9 @@ typedef struct PlfsConf {
 
 void
 set_default_mdhim(MdhimOpts *mdopts);
+
+void
+set_mdhim_comm(void *comm, MdhimOpts *mdopts);
 
 void
 set_default_mount(PlfsMount *pmnt);

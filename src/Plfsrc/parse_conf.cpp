@@ -34,6 +34,11 @@ set_default_mdhim(MdhimOpts *mdopts)
 }
 
 void
+set_mdhim_comm(void *comm, MdhimOpts *mdopts) {
+    mdopts=>mpi_comm = comm;
+}
+
+void
 set_default_mount(PlfsMount *pmnt)
 {
     pmnt->statfs = pmnt->syncer_ip = NULL;
